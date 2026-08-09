@@ -131,7 +131,18 @@
 
   function usefulBonuses(bonuses, limit = 2) {
     const priority = text => /raid pass/i.test(text) ? 10 : /stardust/i.test(text) ? 9 : /egg|hatch/i.test(text) ? 8 : /candy/i.test(text) ? 7 : /\bxp\b/i.test(text) ? 6 : /trade/i.test(text) ? 5 : 1;
-    return [...bonuses].sort((first, second) => priority(second) - priority(first)).slice(0, limit);
+    const concise = text => String(text || "")
+      .replace(/\s+when Eggs are placed in an Incubator during the event period\.?$/i, "")
+      .replace(/\s+during the event period\.?$/i, "")
+      .replace(/\b1\/2(?=\s+Egg)/gi, "½")
+      .replace(/\b1\/4(?=\s+Egg)/gi, "¼")
+      .replace(/\s+/g, " ").trim();
+    const isGameplayEffect = text => {
+      const value = String(text || "").trim();
+      if (!value || /(?:×|x)\s*\d+\s*$/i.test(value)) return false;
+      return /\d+\s*(?:×|x)(?:\s|$)|\d+(?:-|\s)?hour\b|\b(?:increased|decreased|additional|extra|free|reduced|guaranteed|chance|distance|duration|double|triple|half|trade|trades|raid pass|raid passes|attract|last|require|limit)\b/i.test(value);
+    };
+    return [...bonuses].map(concise).filter(isGameplayEffect).sort((first, second) => priority(second) - priority(first)).slice(0, limit);
   }
 
   function startsIn(target, now = Date.now()) {
