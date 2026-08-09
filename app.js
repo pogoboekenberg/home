@@ -347,6 +347,27 @@
     return { day: new Intl.DateTimeFormat(undefined, { day: "2-digit" }).format(date), month: new Intl.DateTimeFormat(undefined, { month: "short" }).format(date), weekday: new Intl.DateTimeFormat(undefined, { weekday: "short" }).format(date), time: new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit" }).format(date) };
   }
 
+  function expectedMeetupRewards(event) {
+    if (!event.liveEventId) return [];
+    const name = String(event.liveEventName || event.eventType || "").toLocaleLowerCase("en");
+    const reward = (label, image, amount = "") => ({ label, image: `assets/meetup-rewards/${image}.webp`, amount });
+    if (name.includes("go tour") && name.includes("kalos")) return [reward("500 Link Charges", "link-charge", "500"), reward("Serena encounter", "serena"), reward("Calem encounter", "calem")];
+    if (name.includes("go fest") && name.includes("2026")) return [reward("Yellow-cap Pikachu encounter", "pikachu-cap-yellow"), reward("Red-cap Pikachu encounter", "pikachu-cap-red"), reward("Blue-cap Pikachu encounter", "pikachu-cap-blue")];
+    if (name.includes("wild") && name.includes("area")) return [reward("800 Max Particles", "max-particles", "800"), reward("Premium Battle Pass", "premium-battle-pass"), reward("Pokémon encounter", "unknown-encounter")];
+    if (name.includes("raid")) return [reward("Premium Battle Pass", "premium-battle-pass")];
+    if (name.includes("max")) return [reward("800 Max Particles", "max-particles", "800")];
+    if (name.includes("spotlight") || name.includes("hatch")) return [reward("Super Incubator", "super-incubator")];
+    if (name.includes("research")) return [reward("Lucky Egg", "lucky-egg"), reward("Incense", "incense"), reward("Lure Module", "lure-module")];
+    if (name.includes("community") || /(^|\s)cd(\s|$)/.test(name)) return [reward("Star Piece", "star-piece"), reward("Lucky Egg", "lucky-egg"), reward("Lure Module", "lure-module"), reward("Premium Battle Pass", "premium-battle-pass"), reward("50 Ultra Balls", "ultra-ball", "50"), reward("25 Rare Candy", "rare-candy", "25"), reward("4 Pokémon encounters", "unknown-encounter", "4")];
+    return [];
+  }
+
+  function renderCheckInRewards(event) {
+    const rewards = expectedMeetupRewards(event);
+    if (!rewards.length) return "";
+    return `<div class="checkin-rewards"><span>Check-in rewards</span><ul>${rewards.map(reward => `<li title="${escapeHtml(reward.label)}" aria-label="${escapeHtml(reward.label)}"><img src="${escapeHtml(reward.image)}" alt="" loading="lazy" decoding="async">${reward.amount ? `<b>${escapeHtml(reward.amount)}</b>` : ""}</li>`).join("")}</ul></div>`;
+  }
+
   function renderMeetups(meetups) {
     if (!meetups.length) {
       $("#featuredMeetup").innerHTML = '<h3>New meetup dates coming soon.</h3><p>Join Discord to hear when the next local event is announced.</p><a href="https://discord.gg/QMDWYzHccS" target="_blank" rel="noopener">Join the community ↗</a>';
@@ -356,10 +377,10 @@
     }
     const first = meetups[0], firstDate = dateParts(first.start);
     $("#meetupStatus").textContent = first.start.getTime() - Date.now() < 86400000 ? "Coming up" : `${Math.ceil((first.start.getTime() - Date.now()) / 86400000)} days away`;
-    $("#featuredMeetup").innerHTML = `<h3>${escapeHtml(first.name || "Community Ambassador Meetup")}</h3><div class="featured-meta"><div><span>When</span><b>${escapeHtml(`${firstDate.weekday} ${firstDate.day} ${firstDate.month} · ${firstDate.time}`)}</b></div><div><span>Where</span><b>${escapeHtml(first.location || "Boekenbergpark")}</b></div></div>${first.url ? `<a href="${escapeHtml(first.url)}" target="_blank" rel="noopener">View meetup on Campfire ↗</a>` : ""}`;
+    $("#featuredMeetup").innerHTML = `<h3>${escapeHtml(first.name || "Community Ambassador Meetup")}</h3><div class="featured-meta"><div><span>When</span><b>${escapeHtml(`${firstDate.weekday} ${firstDate.day} ${firstDate.month} · ${firstDate.time}`)}</b></div><div><span>Where</span><b>${escapeHtml(first.location || "Boekenbergpark")}</b></div></div>${renderCheckInRewards(first)}${first.url ? `<a href="${escapeHtml(first.url)}" target="_blank" rel="noopener">View meetup on Campfire ↗</a>` : ""}`;
     $("#meetupList").innerHTML = meetups.slice(0, 5).map(event => {
       const date = dateParts(event.start);
-      return `<article class="meetup-row"><div class="meetup-date"><b>${escapeHtml(date.day)}</b><span>${escapeHtml(date.month)}</span></div><div class="meetup-info"><h3>${escapeHtml(event.name || "Community Ambassador Meetup")}</h3><p>${escapeHtml(`${date.weekday} · ${date.time} · ${event.location || "Boekenbergpark"}`)}</p></div>${event.url ? `<a href="${escapeHtml(event.url)}" target="_blank" rel="noopener" aria-label="Open ${escapeHtml(event.name)}">↗</a>` : ""}</article>`;
+      return `<article class="meetup-row"><div class="meetup-date"><b>${escapeHtml(date.day)}</b><span>${escapeHtml(date.month)}</span></div><div class="meetup-info"><h3>${escapeHtml(event.name || "Community Ambassador Meetup")}</h3><p>${escapeHtml(`${date.weekday} · ${date.time} · ${event.location || "Boekenbergpark"}`)}</p>${renderCheckInRewards(event)}</div>${event.url ? `<a href="${escapeHtml(event.url)}" target="_blank" rel="noopener" aria-label="Open ${escapeHtml(event.name)}">↗</a>` : ""}</article>`;
     }).join("");
   }
 
@@ -416,7 +437,10 @@
         name: String(details.name || details.campfireLiveEvent?.eventName || meetup.name),
         location: String(details.address || meetup.location),
         start: localDate(details.eventTime) || meetup.start,
-        end: localDate(details.eventEndTime) || meetup.end
+        end: localDate(details.eventEndTime) || meetup.end,
+        eventType: String(details.campfireLiveEvent?.eventType || meetup.eventType || ""),
+        liveEventId: String(details.campfireLiveEvent?.id || meetup.liveEventId || ""),
+        liveEventName: String(details.campfireLiveEvent?.eventName || meetup.liveEventName || "")
       };
     } catch { return meetup; }
   }
@@ -440,6 +464,9 @@
           start,
           end,
           location: String(event.location || area.name),
+          eventType: String(event.campfireLiveEvent?.eventType || ""),
+          liveEventId: String(event.campfireLiveEvent?.id || ""),
+          liveEventName: "",
           url: `https://campfire.nianticlabs.com/discover/meetup/${encodeURIComponent(event.id)}`
         });
       }

@@ -1,4 +1,4 @@
-const CACHE_NAME = "pogo-boekenberg-home-v16";
+const CACHE_NAME = "pogo-boekenberg-home-v17";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -8,7 +8,23 @@ const APP_SHELL = [
   "./manifest.webmanifest",
   "./assets/app-icon-180.png",
   "./assets/app-icon-192.png",
-  "./assets/app-icon-512.png"
+  "./assets/app-icon-512.png",
+  "./assets/meetup-rewards/calem.webp",
+  "./assets/meetup-rewards/incense.webp",
+  "./assets/meetup-rewards/link-charge.webp",
+  "./assets/meetup-rewards/lucky-egg.webp",
+  "./assets/meetup-rewards/lure-module.webp",
+  "./assets/meetup-rewards/max-particles.webp",
+  "./assets/meetup-rewards/pikachu-cap-blue.webp",
+  "./assets/meetup-rewards/pikachu-cap-red.webp",
+  "./assets/meetup-rewards/pikachu-cap-yellow.webp",
+  "./assets/meetup-rewards/premium-battle-pass.webp",
+  "./assets/meetup-rewards/rare-candy.webp",
+  "./assets/meetup-rewards/serena.webp",
+  "./assets/meetup-rewards/star-piece.webp",
+  "./assets/meetup-rewards/super-incubator.webp",
+  "./assets/meetup-rewards/ultra-ball.webp",
+  "./assets/meetup-rewards/unknown-encounter.webp"
 ];
 
 self.addEventListener("install", event => {
