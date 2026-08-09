@@ -136,13 +136,52 @@
       .replace(/\s+during the event period\.?$/i, "")
       .replace(/\b1\/2(?=\s+Egg)/gi, "½")
       .replace(/\b1\/4(?=\s+Egg)/gi, "¼")
+      .replace(/\s*\.\s*$/, "")
       .replace(/\s+/g, " ").trim();
+    const mergeTiers = values => {
+      const numberWords = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19, twenty: 20 };
+      const grouped = new Map(), standalone = [];
+      const add = (key, item) => {
+        const group = grouped.get(key);
+        if (!group) grouped.set(key, { ...item, count: 1 });
+        else { group.count += 1; group.amount = item.stronger(item.amount, group.amount) ? item.amount : group.amount; }
+      };
+      for (const original of values) {
+        const value = original.replace(/^(?:GO Pass Deluxe|Deluxe Pass):\s*/i, "");
+        const multiplier = value.match(/^(\d+(?:\.\d+)?)\s*(?:×|x)\s+(.+)$/i);
+        if (multiplier) {
+          const label = multiplier[2].trim(), amount = Number(multiplier[1]);
+          add(`multiplier:${label.toLocaleLowerCase("en")}`, { kind: "multiplier", label, amount, original, stronger: (next, current) => next > current });
+          continue;
+        }
+        const fraction = value.match(/^(½|¼)\s+(.+)$/i);
+        if (fraction) {
+          const label = fraction[2].trim(), amount = fraction[1] === "¼" ? .25 : .5;
+          add(`fraction:${label.toLocaleLowerCase("en")}`, { kind: "fraction", label, amount, original, stronger: (next, current) => next < current });
+          continue;
+        }
+        const passes = value.match(/^Receive up to (\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty)\s+(?:additional\s+)?(?:free\s+)?Raid Pass(?:es)?(.*)$/i);
+        if (passes) {
+          const amount = Number(passes[1]) || numberWords[passes[1].toLocaleLowerCase("en")], label = passes[2].trim();
+          add(`passes:${label.toLocaleLowerCase("en")}`, { kind: "passes", label, amount, original, stronger: (next, current) => next > current });
+          continue;
+        }
+        standalone.push(original);
+      }
+      for (const group of grouped.values()) {
+        if (group.count === 1) { standalone.push(group.original); continue; }
+        if (group.kind === "multiplier") standalone.push(`Up to ${group.amount}× ${group.label}`);
+        else if (group.kind === "fraction") standalone.push(`Up to ${group.amount === .25 ? "¼" : "½"} ${group.label}`);
+        else standalone.push(`Receive up to ${group.amount} free Raid Passes${group.label ? ` ${group.label}` : ""}`);
+      }
+      return standalone;
+    };
     const isGameplayEffect = text => {
       const value = String(text || "").trim();
       if (!value || /(?:×|x)\s*\d+\s*$/i.test(value)) return false;
       return /\d+\s*(?:×|x)(?:\s|$)|\d+(?:-|\s)?hour\b|\b(?:increased|decreased|additional|extra|free|reduced|guaranteed|chance|distance|duration|double|triple|half|trade|trades|raid pass|raid passes|attract|last|require|limit)\b/i.test(value);
     };
-    return [...bonuses].map(concise).filter(isGameplayEffect).sort((first, second) => priority(second) - priority(first)).slice(0, limit);
+    return mergeTiers([...bonuses].map(concise)).filter(isGameplayEffect).sort((first, second) => priority(second) - priority(first)).slice(0, limit);
   }
 
   function startsIn(target, now = Date.now()) {
