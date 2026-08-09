@@ -8,6 +8,8 @@
   const safeUrl = value => /^https:\/\//i.test(String(value || "")) ? String(value) : "";
   const MEETUP_MAP_QUERY = `query HomeMeetups($input: RealityChannelMapObjectsByS2CellsInput!) { realityChannelMapObjectsByS2Cells(input: $input) { mapObjectsByS2CellsAndTypes { mapObjectsByType { type mapObjects { id event { id location eventTime eventEndTime mapObjectLocation { latitude longitude } campfireLiveEvent { eventType id } } } } } } }`;
   const MEETUP_DETAIL_QUERY = `query HomeMeetupDetails($id: ID!) { event(id: $id) { id name address eventTime eventEndTime campfireLiveEvent { eventName eventType id } } }`;
+  let upcomingRaidBossEntries = [];
+  let upcomingRaidBossFilter = "five";
   const localDate = value => {
     const date = new Date(value);
     return Number.isFinite(date.getTime()) ? date : null;
@@ -236,9 +238,32 @@
     const countdown = upcoming ? startsIn(time) : relativeTime(time);
     return `<article class="featured-pokemon-card${upcoming ? " upcoming-raid-card" : ""}${shadow ? " shadow-boss-card" : ""}"><a href="${escapeHtml(link)}" target="_blank" rel="noopener">
       <div class="featured-mon-art${shadow ? " shadow" : ""}">${boss.image ? `<img src="${escapeHtml(boss.image)}" alt="" loading="lazy">` : `<span aria-hidden="true">${escapeHtml(name.charAt(0))}</span>`}</div>
-      <div class="featured-mon-info"><div class="featured-mon-top"><h4>${shadow ? '<i class="shadow-chip">Shadow</i>' : ""}${escapeHtml(name)}</h4><span data-countdown="${escapeHtml(time.toISOString())}"${upcoming ? ' data-countdown-mode="starts"' : ""}>${countdown}</span></div><small>${escapeHtml(event.name || "Featured battle")}</small>
-      <div class="pokemon-cp"><span class="cp-stat"><small>Normal</small><b>${normal ? `${normal.toLocaleString()} CP` : "Unavailable"}</b></span>${boosted ? `<span class="cp-stat boosted"><small>Boosted${weather ? ` · ${escapeHtml(weather)}` : ""}</small><b>${boosted.toLocaleString()} CP</b></span>` : ""}</div></div>
+      <div class="featured-mon-info"><div class="featured-mon-top"><h4>${shadow ? '<i class="shadow-chip">Shadow</i>' : ""}${escapeHtml(name)}</h4><span data-countdown="${escapeHtml(time.toISOString())}"${upcoming ? ' data-countdown-mode="starts"' : ""}>${countdown}</span></div>
+      ${upcoming ? "" : `<div class="pokemon-cp"><span class="cp-stat"><small>Normal</small><b>${normal ? `${normal.toLocaleString()} CP` : "Unavailable"}</b></span>${boosted ? `<span class="cp-stat boosted"><small>Boosted${weather ? ` · ${escapeHtml(weather)}` : ""}</small><b>${boosted.toLocaleString()} CP</b></span>` : ""}</div>`}</div>
     </a></article>`;
+  }
+
+  function upcomingRaidTier({ boss, event }) {
+    return /\b(?:mega|primal)\b/i.test(`${boss?.name || ""} ${event?.name || ""} ${event?.heading || ""}`) ? "mega" : "five";
+  }
+
+  function renderUpcomingRaidBosses() {
+    const matches = upcomingRaidBossEntries.filter(item => upcomingRaidTier(item) === upcomingRaidBossFilter);
+    $("#upcomingRaidBosses").innerHTML = matches.length
+      ? matches.slice(0, 8).map(item => renderFeaturedPokemon(item, true)).join("")
+      : `<div class="empty-state compact-empty">No upcoming ${upcomingRaidBossFilter === "mega" ? "Mega" : "5-star"} rotation has been announced yet.</div>`;
+    $$('[data-raid-boss-filter]').forEach(button => {
+      const active = button.dataset.raidBossFilter === upcomingRaidBossFilter;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
+  }
+
+  function registerUpcomingRaidToggle() {
+    $$('[data-raid-boss-filter]').forEach(button => button.addEventListener("click", () => {
+      upcomingRaidBossFilter = button.dataset.raidBossFilter;
+      renderUpcomingRaidBosses();
+    }));
   }
 
   async function renderEvents(events, pokemonData) {
@@ -267,7 +292,7 @@
     const upcomingRaids = events.filter(event => {
       const start = localDate(event.start), end = localDate(event.end);
       return start && end && start.getTime() > now && end.getTime() > now && String(event.eventType || "").toLocaleLowerCase("en") === "raid-battles";
-    }).sort((a, b) => localDate(a.start) - localDate(b.start)).slice(0, 6);
+    }).sort((a, b) => localDate(a.start) - localDate(b.start));
     const nextBosses = [], seenNextBosses = new Set();
     for (const event of upcomingRaids) for (const boss of featuredBosses(event)) {
       const key = String(boss.name).toLocaleLowerCase("en");
@@ -275,7 +300,8 @@
       seenNextBosses.add(key);
       nextBosses.push(featuredPokemonEntry(event, boss, pokemonData, localDate(event.start)));
     }
-    $("#upcomingRaidBosses").innerHTML = nextBosses.length ? nextBosses.slice(0, 8).map(item => renderFeaturedPokemon(item, true)).join("") : '<div class="empty-state compact-empty">No future raid rotation has been announced yet.</div>';
+    upcomingRaidBossEntries = nextBosses;
+    renderUpcomingRaidBosses();
 
     const [bonusGroups, upcomingBonusGroups] = await Promise.all([
       Promise.all(active.map(async event => ({ event, bonuses: await liveEventBonuses(event) }))),
@@ -517,6 +543,7 @@
     window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js", { scope: "./", updateViaCache: "none" }).then(registration => registration.update()).catch(() => {}));
   }
 
+  registerUpcomingRaidToggle();
   loadEvents();
   loadMeetups();
   updateCountdowns();
