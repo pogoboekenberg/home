@@ -98,6 +98,7 @@ a:focus-visible, button:focus-visible { outline: 3px solid rgba(79, 70, 229, .35
 .event-group-heading h3 { margin: 0; font-size: 25px; letter-spacing: -.035em; }
 .event-group-heading > span { color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
 .featured-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 13px; }
+.featured-rotation + .featured-rotation { margin-top: 28px; }
 .featured-pokemon-card { min-width: 0; border: 1px solid #e7eafd; border-radius: 15px; background: var(--surface); box-shadow: 0 3px 14px rgba(79, 70, 229, .07); transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
 .featured-pokemon-card:hover { transform: translateY(-3px); border-color: #cfd6ff; box-shadow: var(--shadow-card); }
 .featured-pokemon-card > a { min-height: 128px; display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 13px; padding: 15px; text-decoration: none; }
@@ -108,6 +109,8 @@ a:focus-visible, button:focus-visible { outline: 3px solid rgba(79, 70, 229, .35
 .featured-mon-top { display: flex; align-items: start; justify-content: space-between; gap: 8px; }
 .featured-mon-top h4 { margin: 1px 0 0; font-size: 16px; letter-spacing: -.025em; }
 .featured-mon-top > span { flex: 0 0 auto; color: #047857; font-size: 8px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.upcoming-raid-card .featured-mon-art { background: var(--violet-soft); }
+.upcoming-raid-card .featured-mon-top > span { color: #6d28d9; }
 .featured-mon-info > small { display: block; margin-top: 4px; color: var(--muted); font-size: 9px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pokemon-cp { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); display: grid; grid-template-columns: repeat(auto-fit, minmax(82px, 1fr)); gap: 9px; }
 .cp-stat { min-width: 0; display: block; }
@@ -119,7 +122,7 @@ a:focus-visible, button:focus-visible { outline: 3px solid rgba(79, 70, 229, .35
 .cp-stat.boosted b { color: #065f46; font-size: 14px; }
 .bonus-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
 .bonus-column { min-width: 0; }
-.bonus-column h4 { display: flex; align-items: center; gap: 8px; margin: 0 0 11px; color: #475569; font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.bonus-column h4, .featured-rotation > h4 { display: flex; align-items: center; gap: 8px; margin: 0 0 11px; color: #475569; font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
 .status-dot { width: 7px; height: 7px; border-radius: 50%; }
 .status-dot.active { background: #10b981; box-shadow: 0 0 0 4px rgba(16, 185, 129, .1); }
 .status-dot.upcoming { background: #8b5cf6; box-shadow: 0 0 0 4px rgba(139, 92, 246, .1); }

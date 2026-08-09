@@ -71,11 +71,15 @@
       <div class="event-split">
         <section class="event-group" aria-labelledby="featured-pokemon-title">
           <div class="event-group-heading"><div><p>Featured Pokémon</p><h3 id="featured-pokemon-title">Hundo CP at a glance</h3></div><span>100% IV catch CP</span></div>
-          <div id="featuredPokemon" class="featured-grid" aria-live="polite">
-            <div class="compact-skeleton"><div class="skeleton icon-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div>
-            <div class="compact-skeleton"><div class="skeleton icon-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div>
-            <div class="compact-skeleton"><div class="skeleton icon-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div>
-          </div>
+          <div class="featured-rotation"><h4><span class="status-dot active"></span>Active now</h4><div id="featuredPokemon" class="featured-grid" aria-live="polite">
+              <div class="compact-skeleton"><div class="skeleton icon-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div>
+              <div class="compact-skeleton"><div class="skeleton icon-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div>
+              <div class="compact-skeleton"><div class="skeleton icon-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div>
+          </div></div>
+          <div class="featured-rotation"><h4><span class="status-dot upcoming"></span>Upcoming weekly raid bosses</h4><div id="upcomingRaidBosses" class="featured-grid" aria-live="polite">
+              <div class="compact-skeleton"><div class="skeleton icon-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div>
+              <div class="compact-skeleton"><div class="skeleton icon-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div>
+          </div></div>
         </section>
         <section class="event-group" aria-labelledby="bonuses-title">
           <div class="event-group-heading"><div><p>Gameplay bonuses</p><h3 id="bonuses-title">Now and coming up</h3></div><span>Event effects</span></div>

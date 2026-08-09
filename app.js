@@ -195,6 +195,22 @@
     return `<a class="bonus-card${upcoming ? " upcoming-bonus" : ""}" href="${escapeHtml(link)}" target="_blank" rel="noopener"><span class="bonus-mark" aria-hidden="true">${escapeHtml(bonusMark(bonus))}</span><span class="bonus-copy"><b>${escapeHtml(bonus)}</b><small>${escapeHtml(event.name || "Live event")} · <i data-countdown="${escapeHtml(time.toISOString())}"${upcoming ? ' data-countdown-mode="starts"' : ""}>${countdown}</i></small></span><span class="bonus-arrow" aria-hidden="true">↗</span></a>`;
   }
 
+  function featuredPokemonEntry(event, boss, pokemonData, time) {
+    const stats = pokemonStatsForBoss(boss, pokemonData);
+    return { boss, event, normal: pokemonCp(stats, .59740001), boosted: boss.isMaxBattle ? null : pokemonCp(stats, .667934), weather: weatherTypes(stats), time };
+  }
+
+  function renderFeaturedPokemon({ boss, event, normal, boosted, weather, time }, upcoming = false) {
+    const name = boss.name.replace(/^(Gigantamax|Dynamax)\s+/i, "");
+    const link = safeUrl(event.link) || "https://leekduck.com/events/";
+    const countdown = upcoming ? startsIn(time) : relativeTime(time);
+    return `<article class="featured-pokemon-card${upcoming ? " upcoming-raid-card" : ""}"><a href="${escapeHtml(link)}" target="_blank" rel="noopener">
+      <div class="featured-mon-art">${boss.image ? `<img src="${escapeHtml(boss.image)}" alt="" loading="lazy">` : `<span aria-hidden="true">${escapeHtml(name.charAt(0))}</span>`}</div>
+      <div class="featured-mon-info"><div class="featured-mon-top"><h4>${escapeHtml(name)}</h4><span data-countdown="${escapeHtml(time.toISOString())}"${upcoming ? ' data-countdown-mode="starts"' : ""}>${countdown}</span></div><small>${escapeHtml(event.name || "Featured battle")}</small>
+      <div class="pokemon-cp"><span class="cp-stat"><small>Normal</small><b>${normal ? `${normal.toLocaleString()} CP` : "Unavailable"}</b></span>${boosted ? `<span class="cp-stat boosted"><small>Boosted${weather ? ` · ${escapeHtml(weather)}` : ""}</small><b>${boosted.toLocaleString()} CP</b></span>` : ""}</div></div>
+    </a></article>`;
+  }
+
   async function renderEvents(events, pokemonData) {
     const now = Date.now();
     const active = events.filter(event => {
@@ -213,21 +229,23 @@
         const key = String(boss.name).toLocaleLowerCase("en");
         if (seenFeatured.has(key)) continue;
         seenFeatured.add(key);
-        const stats = pokemonStatsForBoss(boss, pokemonData);
-        const normal = pokemonCp(stats, .59740001);
-        const boosted = boss.isMaxBattle ? null : pokemonCp(stats, .667934);
-        featured.push({ boss, event, normal, boosted, weather: weatherTypes(stats), end: localDate(event.end) });
+        featured.push(featuredPokemonEntry(event, boss, pokemonData, localDate(event.end)));
       }
     }
-    $("#featuredPokemon").innerHTML = featured.length ? featured.slice(0, 8).map(({ boss, event, normal, boosted, weather, end }) => {
-      const name = boss.name.replace(/^(Gigantamax|Dynamax)\s+/i, "");
-      const link = safeUrl(event.link) || "https://leekduck.com/events/";
-      return `<article class="featured-pokemon-card"><a href="${escapeHtml(link)}" target="_blank" rel="noopener">
-        <div class="featured-mon-art">${boss.image ? `<img src="${escapeHtml(boss.image)}" alt="" loading="lazy">` : `<span aria-hidden="true">${escapeHtml(name.charAt(0))}</span>`}</div>
-        <div class="featured-mon-info"><div class="featured-mon-top"><h4>${escapeHtml(name)}</h4><span data-countdown="${escapeHtml(end.toISOString())}">${relativeTime(end)}</span></div><small>${escapeHtml(event.name || "Featured battle")}</small>
-        <div class="pokemon-cp"><span class="cp-stat"><small>Normal</small><b>${normal ? `${normal.toLocaleString()} CP` : "Unavailable"}</b></span>${boosted ? `<span class="cp-stat boosted"><small>Boosted${weather ? ` · ${escapeHtml(weather)}` : ""}</small><b>${boosted.toLocaleString()} CP</b></span>` : ""}</div></div>
-      </a></article>`;
-    }).join("") : '<div class="empty-state">No featured boss rotation is active right now.</div>';
+    $("#featuredPokemon").innerHTML = featured.length ? featured.slice(0, 8).map(item => renderFeaturedPokemon(item)).join("") : '<div class="empty-state">No featured boss rotation is active right now.</div>';
+
+    const upcomingRaids = events.filter(event => {
+      const start = localDate(event.start), end = localDate(event.end);
+      return start && end && start.getTime() > now && end.getTime() > now && String(event.eventType || "").toLocaleLowerCase("en") === "raid-battles";
+    }).sort((a, b) => localDate(a.start) - localDate(b.start)).slice(0, 6);
+    const nextBosses = [], seenNextBosses = new Set();
+    for (const event of upcomingRaids) for (const boss of featuredBosses(event)) {
+      const key = String(boss.name).toLocaleLowerCase("en");
+      if (seenNextBosses.has(key)) continue;
+      seenNextBosses.add(key);
+      nextBosses.push(featuredPokemonEntry(event, boss, pokemonData, localDate(event.start)));
+    }
+    $("#upcomingRaidBosses").innerHTML = nextBosses.length ? nextBosses.slice(0, 8).map(item => renderFeaturedPokemon(item, true)).join("") : '<div class="empty-state compact-empty">No future raid rotation has been announced yet.</div>';
 
     const [bonusGroups, upcomingBonusGroups] = await Promise.all([
       Promise.all(active.map(async event => ({ event, bonuses: await liveEventBonuses(event) }))),
@@ -391,6 +409,7 @@
       $("#eventFreshness").textContent = `Live event feed · updated ${new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit" }).format(new Date())}`;
     } catch {
       $("#featuredPokemon").innerHTML = '<div class="empty-state">The featured Pokémon feed could not be reached.</div>';
+      $("#upcomingRaidBosses").innerHTML = '<div class="empty-state">The upcoming raid boss feed could not be reached.</div>';
       $("#activeBonuses").innerHTML = '<div class="empty-state">The active bonuses feed could not be reached.</div>';
       $("#upcomingBonuses").innerHTML = '<div class="empty-state">The upcoming bonuses feed could not be reached.</div>';
       $("#eventFreshness").textContent = "Live data temporarily unavailable";
