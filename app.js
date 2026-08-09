@@ -95,33 +95,83 @@
     return bosses * 8 + bonuses * 3 + (/community day|raid|event|max/i.test(label) ? 2 : 0);
   }
 
-  function renderEvents(events, pokemonData) {
+  async function liveEventBonuses(event) {
+    const structured = eventBonuses(event);
+    if (structured.length) return structured;
+    const url = safeUrl(event.link);
+    if (!/^https:\/\/leekduck\.com\/events\//i.test(url)) return [];
+    const cacheKey = `pogo-home-event-bonuses-v1:${url}`;
+    try {
+      const cached = JSON.parse(localStorage.getItem(cacheKey) || "null");
+      if (Array.isArray(cached?.bonuses) && Date.now() - Number(cached.savedAt) < 21600000) return cached.bonuses;
+    } catch {}
+    try {
+      const response = await fetch(url, { cache: "force-cache", credentials: "omit" });
+      if (!response.ok) throw new Error("Bonus page unavailable");
+      const documentNode = new DOMParser().parseFromString(await response.text(), "text/html");
+      const seen = new Set(), bonuses = [];
+      documentNode.querySelectorAll(".bonus-list .bonus-text").forEach(node => {
+        const text = String(node.textContent || "").replace(/\s+/g, " ").trim();
+        const key = text.toLocaleLowerCase("en");
+        if (text && !seen.has(key)) { seen.add(key); bonuses.push(text); }
+      });
+      localStorage.setItem(cacheKey, JSON.stringify({ savedAt: Date.now(), bonuses }));
+      return bonuses;
+    } catch { return []; }
+  }
+
+  function bonusMark(text) {
+    if (/stardust/i.test(text)) return "✦";
+    if (/raid pass|raid/i.test(text)) return "R";
+    if (/candy/i.test(text)) return "×";
+    if (/\bxp\b/i.test(text)) return "XP";
+    if (/egg|hatch/i.test(text)) return "½";
+    return "+";
+  }
+
+  async function renderEvents(events, pokemonData) {
     const now = Date.now();
     const active = events.filter(event => {
       const start = localDate(event.start), end = localDate(event.end);
       return start && end && start.getTime() <= now && end.getTime() > now;
-    }).sort((a, b) => eventScore(b) - eventScore(a) || localDate(a.end) - localDate(b.end)).slice(0, 6);
+    }).sort((a, b) => eventScore(b) - eventScore(a) || localDate(a.end) - localDate(b.end)).slice(0, 10);
     if (!active.length) {
-      $("#activeEvents").innerHTML = '<div class="empty-state">No timed in-game event is active right now. Check back shortly for the next rotation.</div>';
+      $("#featuredPokemon").innerHTML = '<div class="empty-state">No featured boss rotation is active right now.</div>';
+      $("#activeBonuses").innerHTML = '<div class="empty-state">No event-wide bonuses are listed as active right now.</div>';
       return;
     }
-    $("#activeEvents").innerHTML = active.map(event => {
-      const end = localDate(event.end);
-      const bonuses = eventBonuses(event).slice(0, 2);
-      const bosses = featuredBosses(event).slice(0, 3);
-      const bossMarkup = bosses.length ? `<div class="boss-cp"><span class="boss-cp-label">Perfect catch CP · 100% IV</span><div class="boss-list">${bosses.map(boss => {
+
+    const featured = [], seenFeatured = new Set();
+    for (const event of active) {
+      for (const boss of featuredBosses(event)) {
+        const key = String(boss.name).toLocaleLowerCase("en");
+        if (seenFeatured.has(key)) continue;
+        seenFeatured.add(key);
         const stats = pokemonStatsForBoss(boss, pokemonData);
         const normal = pokemonCp(stats, .59740001);
         const boosted = boss.isMaxBattle ? null : pokemonCp(stats, .667934);
-        const weather = weatherTypes(stats);
-        return `<div class="boss"><b>${escapeHtml(boss.name.replace(/^(Gigantamax|Dynamax)\s+/i, ""))}</b><small>${normal ? `${normal.toLocaleString()} CP${boosted ? ` · ${boosted.toLocaleString()} boosted${weather ? ` (${escapeHtml(weather)})` : ""}` : ""}` : "CP unavailable"}</small></div>`;
-      }).join("")}</div></div>` : "";
-      return `<article class="event-card">
-        <div class="event-content"><div class="event-meta"><span class="event-type">${escapeHtml(event.eventType || "Live event")}</span><p class="event-timer" data-countdown="${escapeHtml(end.toISOString())}">${relativeTime(end)}</p></div><h3>${escapeHtml(event.name || event.heading || "Pokémon GO event")}</h3>
-        ${bonuses.length ? `<ul class="bonus-list">${bonuses.map(bonus => `<li>${escapeHtml(bonus)}</li>`).join("")}</ul>` : ""}
-        ${bossMarkup}<a class="event-link" href="${escapeHtml(safeUrl(event.link) || "https://leekduck.com/events/")}" target="_blank" rel="noopener">View event ↗</a></div>
-      </article>`;
-    }).join("");
+        featured.push({ boss, event, normal, boosted, weather: weatherTypes(stats), end: localDate(event.end) });
+      }
+    }
+    $("#featuredPokemon").innerHTML = featured.length ? featured.slice(0, 8).map(({ boss, event, normal, boosted, weather, end }) => {
+      const name = boss.name.replace(/^(Gigantamax|Dynamax)\s+/i, "");
+      const link = safeUrl(event.link) || "https://leekduck.com/events/";
+      return `<article class="featured-pokemon-card"><a href="${escapeHtml(link)}" target="_blank" rel="noopener">
+        <div class="featured-mon-art">${boss.image ? `<img src="${escapeHtml(boss.image)}" alt="" loading="lazy">` : `<span aria-hidden="true">${escapeHtml(name.charAt(0))}</span>`}</div>
+        <div class="featured-mon-info"><div class="featured-mon-top"><h4>${escapeHtml(name)}</h4><span data-countdown="${escapeHtml(end.toISOString())}">${relativeTime(end)}</span></div><small>${escapeHtml(event.name || "Featured battle")}</small>
+        <div class="pokemon-cp"><b>${normal ? `${normal.toLocaleString()} CP` : "CP unavailable"}</b>${boosted ? `<span>${boosted.toLocaleString()} boosted${weather ? ` · ${escapeHtml(weather)}` : ""}</span>` : ""}</div></div>
+      </a></article>`;
+    }).join("") : '<div class="empty-state">No featured boss rotation is active right now.</div>';
+
+    const bonusGroups = await Promise.all(active.map(async event => ({ event, bonuses: await liveEventBonuses(event) })));
+    const bonusItems = [], seenBonuses = new Set();
+    for (const { event, bonuses } of bonusGroups) for (const bonus of bonuses) {
+      const key = bonus.toLocaleLowerCase("en");
+      if (seenBonuses.has(key)) continue;
+      seenBonuses.add(key);
+      bonusItems.push({ bonus, event, end: localDate(event.end) });
+    }
+    $("#activeBonuses").innerHTML = bonusItems.length ? bonusItems.slice(0, 10).map(({ bonus, event, end }) => `<a class="bonus-card" href="${escapeHtml(safeUrl(event.link) || "https://leekduck.com/events/")}" target="_blank" rel="noopener"><span class="bonus-mark" aria-hidden="true">${escapeHtml(bonusMark(bonus))}</span><span class="bonus-copy"><b>${escapeHtml(bonus)}</b><small>${escapeHtml(event.name || "Live event")} · <i data-countdown="${escapeHtml(end.toISOString())}">${relativeTime(end)}</i></small></span><span class="bonus-arrow" aria-hidden="true">↗</span></a>`).join("") : '<div class="empty-state">No event-wide bonuses are listed as active right now.</div>';
   }
 
   function unfoldIcs(text) { return text.replace(/\r?\n[ \t]/g, ""); }
@@ -259,10 +309,11 @@
       if (!eventsResponse.ok) throw new Error("Event feed unavailable");
       const payload = await eventsResponse.json();
       const events = Array.isArray(payload) ? payload : payload.events || [];
-      renderEvents(events, pokemonData);
+      await renderEvents(events, pokemonData);
       $("#eventFreshness").textContent = `Live event feed · updated ${new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit" }).format(new Date())}`;
     } catch {
-      $("#activeEvents").innerHTML = '<div class="empty-state">The live event feed could not be reached. Use “All game events” for the latest details.</div>';
+      $("#featuredPokemon").innerHTML = '<div class="empty-state">The featured Pokémon feed could not be reached.</div>';
+      $("#activeBonuses").innerHTML = '<div class="empty-state">The active bonuses feed could not be reached.</div>';
       $("#eventFreshness").textContent = "Live data temporarily unavailable";
     }
   }
