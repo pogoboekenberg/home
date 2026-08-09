@@ -15,7 +15,7 @@
       const saved = localStorage.getItem(LANGUAGE_KEY);
       if (saved === "en" || saved === "nl") return saved;
     } catch {}
-    return /^nl\b/i.test(navigator.language || "") ? "nl" : "en";
+    return "nl";
   })();
   let latestEvents = null, latestPokemonData = [], latestMeetups = null;
   const TRANSLATION_PAIRS = [
