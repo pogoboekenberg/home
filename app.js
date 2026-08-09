@@ -197,16 +197,17 @@
 
   function featuredPokemonEntry(event, boss, pokemonData, time) {
     const stats = pokemonStatsForBoss(boss, pokemonData);
-    return { boss, event, normal: pokemonCp(stats, .59740001), boosted: boss.isMaxBattle ? null : pokemonCp(stats, .667934), weather: weatherTypes(stats), time };
+    const shadow = /\bshadow\b/i.test(`${boss.name || ""} ${event.name || ""} ${event.heading || ""}`);
+    return { boss, event, normal: pokemonCp(stats, .59740001), boosted: boss.isMaxBattle ? null : pokemonCp(stats, .667934), weather: weatherTypes(stats), shadow, time };
   }
 
-  function renderFeaturedPokemon({ boss, event, normal, boosted, weather, time }, upcoming = false) {
-    const name = boss.name.replace(/^(Gigantamax|Dynamax)\s+/i, "");
+  function renderFeaturedPokemon({ boss, event, normal, boosted, weather, shadow, time }, upcoming = false) {
+    const name = boss.name.replace(/^(Gigantamax|Dynamax|Shadow)\s+/i, "");
     const link = safeUrl(event.link) || "https://leekduck.com/events/";
     const countdown = upcoming ? startsIn(time) : relativeTime(time);
-    return `<article class="featured-pokemon-card${upcoming ? " upcoming-raid-card" : ""}"><a href="${escapeHtml(link)}" target="_blank" rel="noopener">
-      <div class="featured-mon-art">${boss.image ? `<img src="${escapeHtml(boss.image)}" alt="" loading="lazy">` : `<span aria-hidden="true">${escapeHtml(name.charAt(0))}</span>`}</div>
-      <div class="featured-mon-info"><div class="featured-mon-top"><h4>${escapeHtml(name)}</h4><span data-countdown="${escapeHtml(time.toISOString())}"${upcoming ? ' data-countdown-mode="starts"' : ""}>${countdown}</span></div><small>${escapeHtml(event.name || "Featured battle")}</small>
+    return `<article class="featured-pokemon-card${upcoming ? " upcoming-raid-card" : ""}${shadow ? " shadow-boss-card" : ""}"><a href="${escapeHtml(link)}" target="_blank" rel="noopener">
+      <div class="featured-mon-art${shadow ? " shadow" : ""}">${boss.image ? `<img src="${escapeHtml(boss.image)}" alt="" loading="lazy">` : `<span aria-hidden="true">${escapeHtml(name.charAt(0))}</span>`}</div>
+      <div class="featured-mon-info"><div class="featured-mon-top"><h4>${shadow ? '<i class="shadow-chip">Shadow</i>' : ""}${escapeHtml(name)}</h4><span data-countdown="${escapeHtml(time.toISOString())}"${upcoming ? ' data-countdown-mode="starts"' : ""}>${countdown}</span></div><small>${escapeHtml(event.name || "Featured battle")}</small>
       <div class="pokemon-cp"><span class="cp-stat"><small>Normal</small><b>${normal ? `${normal.toLocaleString()} CP` : "Unavailable"}</b></span>${boosted ? `<span class="cp-stat boosted"><small>Boosted${weather ? ` · ${escapeHtml(weather)}` : ""}</small><b>${boosted.toLocaleString()} CP</b></span>` : ""}</div></div>
     </a></article>`;
   }
