@@ -11,11 +11,15 @@
   const RAID_BOSS_FILTER_KEY = "pogo-home-raid-boss-filter-v1";
   let activeRaidBossEntries = [];
   let upcomingRaidBossEntries = [];
-  let raidBossFilter = (() => {
+  let raidBossFilters = (() => {
     try {
       const saved = localStorage.getItem(RAID_BOSS_FILTER_KEY);
-      return saved === "mega" || saved === "five" || saved === "both" ? saved : "five";
-    } catch { return "five"; }
+      if (saved === "both") return new Set(["five", "mega"]);
+      if (saved === "mega" || saved === "five") return new Set([saved]);
+      const parsed = JSON.parse(saved || "null");
+      if (Array.isArray(parsed)) return new Set(parsed.filter(value => value === "five" || value === "mega"));
+    } catch {}
+    return new Set(["five", "mega"]);
   })();
   const localDate = value => {
     const date = new Date(value);
@@ -257,34 +261,33 @@
 
   function syncRaidBossToggle() {
     $$('[data-raid-boss-filter]').forEach(button => {
-      const active = button.dataset.raidBossFilter === raidBossFilter;
+      const active = raidBossFilters.has(button.dataset.raidBossFilter);
       button.classList.toggle("active", active);
       button.setAttribute("aria-pressed", String(active));
     });
   }
 
   function renderRaidBossRows() {
-    const label = raidBossFilter === "mega" ? "Mega" : raidBossFilter === "five" ? "5-star" : "raid";
-    const matchesFilter = item => {
-      const tier = raidBossTier(item);
-      return tier !== "max" && (raidBossFilter === "both" || tier === raidBossFilter);
-    };
+    const label = raidBossFilters.size === 2 ? "raid" : raidBossFilters.has("mega") ? "Mega" : raidBossFilters.has("five") ? "5-star" : "selected raid";
+    const matchesFilter = item => raidBossFilters.has(raidBossTier(item));
     const activeMatches = activeRaidBossEntries.filter(matchesFilter);
     const upcomingMatches = upcomingRaidBossEntries.filter(matchesFilter);
     $("#featuredPokemon").innerHTML = activeMatches.length
       ? activeMatches.slice(0, 8).map(item => renderFeaturedPokemon(item)).join("")
-      : `<div class="empty-state compact-empty">No ${label} boss rotation is active right now.</div>`;
+      : `<div class="empty-state compact-empty">${raidBossFilters.size ? `No ${label} boss rotation is active right now.` : "Choose 5★, Mega, or both above."}</div>`;
     $("#upcomingRaidBosses").innerHTML = upcomingMatches.length
       ? upcomingMatches.slice(0, 8).map(item => renderFeaturedPokemon(item, true)).join("")
-      : `<div class="empty-state compact-empty">No upcoming ${label} rotation has been announced yet.</div>`;
+      : `<div class="empty-state compact-empty">${raidBossFilters.size ? `No upcoming ${label} rotation has been announced yet.` : "Choose 5★, Mega, or both above."}</div>`;
     syncRaidBossToggle();
   }
 
   function registerRaidBossToggle() {
     syncRaidBossToggle();
     $$('[data-raid-boss-filter]').forEach(button => button.addEventListener("click", () => {
-      raidBossFilter = button.dataset.raidBossFilter;
-      try { localStorage.setItem(RAID_BOSS_FILTER_KEY, raidBossFilter); } catch {}
+      const filter = button.dataset.raidBossFilter;
+      if (raidBossFilters.has(filter)) raidBossFilters.delete(filter);
+      else raidBossFilters.add(filter);
+      try { localStorage.setItem(RAID_BOSS_FILTER_KEY, JSON.stringify([...raidBossFilters])); } catch {}
       renderRaidBossRows();
     }));
   }
