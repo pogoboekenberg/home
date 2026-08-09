@@ -139,7 +139,11 @@ a:focus-visible, button:focus-visible { outline: 3px solid rgba(79, 70, 229, .35
 .bonus-copy { min-width: 0; }
 .bonus-copy b { display: block; font-size: 12px; line-height: 1.35; }
 .bonus-copy small { display: block; margin-top: 4px; color: var(--muted); font-size: 9px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.bonus-copy i { color: #047857; font-style: normal; }
+.bonus-copy small > i { color: #047857; font-style: normal; }
+.bonus-access { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+.bonus-access i { padding: 3px 6px; border-radius: 999px; font-size: 8px; font-style: normal; font-weight: 800; }
+.bonus-access .free-tier { color: #047857; background: #d1fae5; }
+.bonus-access .paid-tier { color: #6d28d9; background: #ede9fe; }
 .bonus-arrow { color: var(--primary); font-size: 13px; font-weight: 800; }
 .empty-state { grid-column: 1/-1; border: 1px dashed #c7d2fe; border-radius: var(--radius-card); padding: 38px; color: var(--muted); background: rgba(255, 255, 255, .55); }
 .compact-empty { padding: 22px; font-size: 11px; line-height: 1.5; }

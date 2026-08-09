@@ -1,4 +1,4 @@
-const CACHE_NAME = "pogo-boekenberg-home-v13";
+const CACHE_NAME = "pogo-boekenberg-home-v14";
 const APP_SHELL = [
   "./",
   "./index.html",

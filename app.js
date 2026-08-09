@@ -100,7 +100,7 @@
     if (structured.length) return structured;
     const url = safeUrl(event.link);
     if (!/^https:\/\/leekduck\.com\/events\//i.test(url)) return [];
-    const cacheKey = `pogo-home-event-bonuses-v1:${url}`;
+    const cacheKey = `pogo-home-event-bonuses-v2:${url}`;
     try {
       const cached = JSON.parse(localStorage.getItem(cacheKey) || "null");
       if (Array.isArray(cached?.bonuses) && Date.now() - Number(cached.savedAt) < 21600000) return cached.bonuses;
@@ -113,7 +113,18 @@
       documentNode.querySelectorAll(".bonus-list .bonus-text").forEach(node => {
         const text = String(node.textContent || "").replace(/\s+/g, " ").trim();
         const key = text.toLocaleLowerCase("en");
-        if (text && !seen.has(key)) { seen.add(key); bonuses.push(text); }
+        if (!text || seen.has(key)) return;
+        seen.add(key);
+        const list = node.closest(".bonus-list");
+        let sibling = list?.previousElementSibling, paid = false;
+        while (sibling) {
+          if (/^H[2-4]$/.test(sibling.tagName)) {
+            paid = /ticket|deluxe|paid/i.test(String(sibling.textContent || ""));
+            break;
+          }
+          sibling = sibling.previousElementSibling;
+        }
+        bonuses.push(paid && !/^(?:GO Pass Deluxe|Deluxe Pass|Paid):/i.test(text) ? `Paid: ${text}` : text);
       });
       localStorage.setItem(cacheKey, JSON.stringify({ savedAt: Date.now(), bonuses }));
       return bonuses;
@@ -143,36 +154,43 @@
       const grouped = new Map(), standalone = [];
       const add = (key, item) => {
         const group = grouped.get(key);
-        if (!group) grouped.set(key, { ...item, count: 1 });
-        else { group.count += 1; group.amount = item.stronger(item.amount, group.amount) ? item.amount : group.amount; }
+        if (!group) grouped.set(key, { ...item, count: 1, freeAmount: item.paid ? null : item.amount, paidAmount: item.paid ? item.amount : null });
+        else {
+          group.count += 1;
+          group.amount = item.stronger(item.amount, group.amount) ? item.amount : group.amount;
+          const accessKey = item.paid ? "paidAmount" : "freeAmount";
+          if (group[accessKey] === null || item.stronger(item.amount, group[accessKey])) group[accessKey] = item.amount;
+        }
       };
       for (const original of values) {
-        const value = original.replace(/^(?:GO Pass Deluxe|Deluxe Pass):\s*/i, "");
+        const paid = /^(?:GO Pass Deluxe|Deluxe Pass|Paid):/i.test(original);
+        const value = original.replace(/^(?:GO Pass Deluxe|Deluxe Pass|Paid):\s*/i, "");
         const multiplier = value.match(/^(\d+(?:\.\d+)?)\s*(?:×|x)\s+(.+)$/i);
         if (multiplier) {
           const label = multiplier[2].trim(), amount = Number(multiplier[1]);
-          add(`multiplier:${label.toLocaleLowerCase("en")}`, { kind: "multiplier", label, amount, original, stronger: (next, current) => next > current });
+          add(`multiplier:${label.toLocaleLowerCase("en")}`, { kind: "multiplier", label, amount, original, paid, stronger: (next, current) => next > current });
           continue;
         }
         const fraction = value.match(/^(½|¼)\s+(.+)$/i);
         if (fraction) {
           const label = fraction[2].trim(), amount = fraction[1] === "¼" ? .25 : .5;
-          add(`fraction:${label.toLocaleLowerCase("en")}`, { kind: "fraction", label, amount, original, stronger: (next, current) => next < current });
+          add(`fraction:${label.toLocaleLowerCase("en")}`, { kind: "fraction", label, amount, original, paid, stronger: (next, current) => next < current });
           continue;
         }
         const passes = value.match(/^Receive up to (\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty)\s+(?:additional\s+)?(?:free\s+)?Raid Pass(?:es)?(.*)$/i);
         if (passes) {
           const amount = Number(passes[1]) || numberWords[passes[1].toLocaleLowerCase("en")], label = passes[2].trim();
-          add(`passes:${label.toLocaleLowerCase("en")}`, { kind: "passes", label, amount, original, stronger: (next, current) => next > current });
+          add(`passes:${label.toLocaleLowerCase("en")}`, { kind: "passes", label, amount, original, paid, stronger: (next, current) => next > current });
           continue;
         }
         standalone.push(original);
       }
       for (const group of grouped.values()) {
         if (group.count === 1) { standalone.push(group.original); continue; }
-        if (group.kind === "multiplier") standalone.push(`Up to ${group.amount}× ${group.label}`);
-        else if (group.kind === "fraction") standalone.push(`Up to ${group.amount === .25 ? "¼" : "½"} ${group.label}`);
-        else standalone.push(`Receive up to ${group.amount} free Raid Passes${group.label ? ` ${group.label}` : ""}`);
+        const access = formatter => group.freeAmount !== null && group.paidAmount !== null ? ` (Free: ${formatter(group.freeAmount)} · Paid: ${formatter(group.paidAmount)})` : group.paidAmount !== null ? ` (Paid: ${formatter(group.paidAmount)})` : "";
+        if (group.kind === "multiplier") standalone.push(`Up to ${group.amount}× ${group.label}${access(amount => `${amount}×`)}`);
+        else if (group.kind === "fraction") standalone.push(`Up to ${group.amount === .25 ? "¼" : "½"} ${group.label}${access(amount => amount === .25 ? "¼" : "½")}`);
+        else standalone.push(`Receive up to ${group.amount} Raid Passes${group.label ? ` ${group.label}` : ""}${access(String)}`);
       }
       return standalone;
     };
@@ -189,10 +207,18 @@
     return text === "ending now" ? "starting now" : `starts in ${text.replace(/ left$/, "")}`;
   }
 
+  function bonusTitleMarkup(bonus) {
+    const split = String(bonus).match(/^(.*?)\s*\(Free:\s*(.*?)\s*·\s*Paid:\s*(.*?)\)$/i);
+    if (split) return `<b>${escapeHtml(split[1])}</b><span class="bonus-access"><i class="free-tier">Free ${escapeHtml(split[2])}</i><i class="paid-tier">Paid ${escapeHtml(split[3])}</i></span>`;
+    const paid = String(bonus).match(/^(.*?)\s*\(Paid:\s*(.*?)\)$/i);
+    if (paid) return `<b>${escapeHtml(paid[1])}</b><span class="bonus-access"><i class="paid-tier">Paid ${escapeHtml(paid[2])}</i></span>`;
+    return `<b>${escapeHtml(bonus)}</b>`;
+  }
+
   function renderBonusCard({ bonus, event, time }, upcoming = false) {
     const link = safeUrl(event.link) || "https://leekduck.com/events/";
     const countdown = upcoming ? startsIn(time) : relativeTime(time);
-    return `<a class="bonus-card${upcoming ? " upcoming-bonus" : ""}" href="${escapeHtml(link)}" target="_blank" rel="noopener"><span class="bonus-mark" aria-hidden="true">${escapeHtml(bonusMark(bonus))}</span><span class="bonus-copy"><b>${escapeHtml(bonus)}</b><small>${escapeHtml(event.name || "Live event")} · <i data-countdown="${escapeHtml(time.toISOString())}"${upcoming ? ' data-countdown-mode="starts"' : ""}>${countdown}</i></small></span><span class="bonus-arrow" aria-hidden="true">↗</span></a>`;
+    return `<a class="bonus-card${upcoming ? " upcoming-bonus" : ""}" href="${escapeHtml(link)}" target="_blank" rel="noopener"><span class="bonus-mark" aria-hidden="true">${escapeHtml(bonusMark(bonus))}</span><span class="bonus-copy">${bonusTitleMarkup(bonus)}<small>${escapeHtml(event.name || "Live event")} · <i data-countdown="${escapeHtml(time.toISOString())}"${upcoming ? ' data-countdown-mode="starts"' : ""}>${countdown}</i></small></span><span class="bonus-arrow" aria-hidden="true">↗</span></a>`;
   }
 
   function featuredPokemonEntry(event, boss, pokemonData, time) {
