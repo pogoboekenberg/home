@@ -147,6 +147,7 @@
       .replace(/\s+during the event period\.?$/i, "")
       .replace(/\b1\/2(?=\s+Egg)/gi, "½")
       .replace(/\b1\/4(?=\s+Egg)/gi, "¼")
+      .replace(/^One additional Special Trade can be made for a maximum of (?:two|2) for the day\*?$/i, "+1 Special Trade · 2 total")
       .replace(/\s*\.\s*$/, "")
       .replace(/\s+/g, " ").trim();
     const mergeTiers = values => {
@@ -197,6 +198,8 @@
     const isGameplayEffect = text => {
       const value = String(text || "").trim();
       if (!value || /(?:×|x)\s*\d+\s*$/i.test(value)) return false;
+      if (/\btrades?\b/i.test(value) && /stardust|less|reduc|discount|cost/i.test(value)) return false;
+      if (/\btrades?\b/i.test(value) && !/\bspecial trades?\b/i.test(value)) return false;
       return /\d+\s*(?:×|x)(?:\s|$)|\d+(?:-|\s)?hour\b|\b(?:increased|decreased|additional|extra|free|reduced|guaranteed|chance|distance|duration|double|triple|half|trade|trades|raid pass|raid passes|attract|last|require|limit)\b/i.test(value);
     };
     return mergeTiers([...bonuses].map(concise)).filter(isGameplayEffect).sort((first, second) => priority(second) - priority(first)).slice(0, limit);
