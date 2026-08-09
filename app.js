@@ -107,19 +107,17 @@
     }
     $("#activeEvents").innerHTML = active.map(event => {
       const end = localDate(event.end);
-      const bonuses = eventBonuses(event).slice(0, 4);
-      const bosses = featuredBosses(event).slice(0, 5);
-      const art = safeUrl(event.image);
+      const bonuses = eventBonuses(event).slice(0, 2);
+      const bosses = featuredBosses(event).slice(0, 3);
       const bossMarkup = bosses.length ? `<div class="boss-cp"><span class="boss-cp-label">Perfect catch CP · 100% IV</span><div class="boss-list">${bosses.map(boss => {
         const stats = pokemonStatsForBoss(boss, pokemonData);
         const normal = pokemonCp(stats, .59740001);
         const boosted = boss.isMaxBattle ? null : pokemonCp(stats, .667934);
         const weather = weatherTypes(stats);
-        return `<div class="boss">${boss.image ? `<img src="${escapeHtml(boss.image)}" alt="" loading="lazy">` : ""}<b>${escapeHtml(boss.name.replace(/^(Gigantamax|Dynamax)\s+/i, ""))}</b><small>${normal ? `${normal.toLocaleString()} CP${boosted ? ` · ${boosted.toLocaleString()} boosted${weather ? ` (${escapeHtml(weather)})` : ""}` : ""}` : "CP unavailable"}</small></div>`;
+        return `<div class="boss"><b>${escapeHtml(boss.name.replace(/^(Gigantamax|Dynamax)\s+/i, ""))}</b><small>${normal ? `${normal.toLocaleString()} CP${boosted ? ` · ${boosted.toLocaleString()} boosted${weather ? ` (${escapeHtml(weather)})` : ""}` : ""}` : "CP unavailable"}</small></div>`;
       }).join("")}</div></div>` : "";
       return `<article class="event-card">
-        <div class="event-art">${art ? `<img src="${escapeHtml(art)}" alt="" loading="lazy">` : ""}<span class="event-type">${escapeHtml(event.eventType || "Live event")}</span></div>
-        <div class="event-content"><p class="event-timer" data-countdown="${escapeHtml(end.toISOString())}">${relativeTime(end)}</p><h3>${escapeHtml(event.name || event.heading || "Pokémon GO event")}</h3>
+        <div class="event-content"><div class="event-meta"><span class="event-type">${escapeHtml(event.eventType || "Live event")}</span><p class="event-timer" data-countdown="${escapeHtml(end.toISOString())}">${relativeTime(end)}</p></div><h3>${escapeHtml(event.name || event.heading || "Pokémon GO event")}</h3>
         ${bonuses.length ? `<ul class="bonus-list">${bonuses.map(bonus => `<li>${escapeHtml(bonus)}</li>`).join("")}</ul>` : '<ul class="bonus-list"><li>Event details are available from the source</li></ul>'}
         ${bossMarkup}<a class="event-link" href="${escapeHtml(safeUrl(event.link) || "https://leekduck.com/events/")}" target="_blank" rel="noopener">Full event details ↗</a></div>
       </article>`;
