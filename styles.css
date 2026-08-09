@@ -47,10 +47,13 @@ a:focus-visible, button:focus-visible { outline: 3px solid rgba(79, 70, 229, .35
 .site-header nav { display: flex; align-items: center; gap: 32px; font-size: 14px; font-weight: 600; }
 .site-header nav a { text-decoration: none; transition: color .2s ease; }
 .site-header nav a:not(.nav-map):hover { color: var(--primary); }
+.discord-icon { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 50%; background: #5865f2; box-shadow: 0 4px 14px rgba(88, 101, 242, .25); transition: transform .2s ease, box-shadow .2s ease !important; }
+.discord-icon img { width: 21px; height: 21px; display: block; }
+.discord-icon:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(88, 101, 242, .32); }
 .nav-map { color: #fff; background: linear-gradient(135deg, var(--primary), var(--secondary)); padding: 12px 18px; border-radius: 999px; box-shadow: var(--shadow-button); transition: transform .2s ease, box-shadow .2s ease; }
 .nav-map:hover { transform: translateY(-2px); box-shadow: 0 9px 20px rgba(79, 70, 229, .32); }
 
-.hero { min-height: 670px; padding: 90px max(24px, calc((100vw - 1280px) / 2)) 98px; display: grid; grid-template-columns: minmax(0, 1.03fr) minmax(390px, .97fr); gap: 8vw; align-items: center; position: relative; isolation: isolate; }
+.hero { min-height: 630px; padding: 78px max(24px, calc((100vw - 1280px) / 2)) 86px; display: grid; grid-template-columns: minmax(0, 1.03fr) minmax(390px, .97fr); gap: 8vw; align-items: center; position: relative; isolation: isolate; }
 .hero:before, .hero:after { content: ""; position: absolute; border-radius: 50%; filter: blur(80px); z-index: -2; pointer-events: none; animation: breathe 7s ease-in-out infinite alternate; }
 .hero:before { width: 520px; height: 520px; background: rgba(99, 102, 241, .20); top: -190px; right: -90px; }
 .hero:after { width: 430px; height: 430px; background: rgba(168, 85, 247, .16); left: -180px; bottom: -130px; animation-delay: -3s; }
@@ -84,18 +87,7 @@ a:focus-visible, button:focus-visible { outline: 3px solid rgba(79, 70, 229, .35
 .featured-meta b { display: block; margin-top: 5px; font-size: 13px; }
 .featured-meetup a { display: inline-flex; margin-top: 19px; font-size: 13px; font-weight: 800; color: var(--primary); text-underline-offset: 4px; }
 
-.pulse { min-height: 94px; background: linear-gradient(120deg, #312e81, #4f46e5 55%, #6d28d9); color: white; padding: 0 max(24px, calc((100vw - 1280px) / 2)); display: flex; align-items: center; gap: 5vw; box-shadow: 0 14px 40px rgba(49, 46, 129, .17); }
-.pulse > div { display: flex; align-items: center; gap: 14px; margin-right: auto; }
-.pulse p { margin: 0; }
-.pulse strong, .pulse small { display: block; }
-.pulse strong { font-size: 14px; }
-.pulse small { color: #c7d2fe; font-size: 12px; margin-top: 3px; }
-.live-dot { width: 10px; height: 10px; background: #34d399; border-radius: 50%; box-shadow: 0 0 0 6px rgba(52, 211, 153, .14), 0 0 20px rgba(52, 211, 153, .8); }
-.pulse > a { min-height: 44px; display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 700; text-decoration: none; white-space: nowrap; }
-.pulse > a span { transition: transform .2s ease; }
-.pulse > a:hover span { transform: translateX(4px); }
-
-.section { padding: 110px max(24px, calc((100vw - 1280px) / 2)); }
+.section { padding: 92px max(24px, calc((100vw - 1280px) / 2)); }
 .section-heading { display: flex; justify-content: space-between; gap: 60px; align-items: end; margin-bottom: 54px; }
 .section-heading h2 { font-size: clamp(42px, 4.8vw, 64px); }
 .section-heading > p { max-width: 430px; color: var(--muted); font-size: 16px; line-height: 1.7; margin: 0; }
@@ -145,16 +137,6 @@ a:focus-visible, button:focus-visible { outline: 3px solid rgba(79, 70, 229, .35
 .meetup-row > a { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .35); text-decoration: none; transition: background .2s ease, color .2s ease, transform .2s ease; }
 .meetup-row > a:hover { background: #fff; color: var(--primary); transform: translateY(-2px); }
 
-.discord-cta { padding: 120px 22px; text-align: center; background: #f8fafc; position: relative; overflow: hidden; isolation: isolate; }
-.discord-cta:before, .discord-cta:after { content: ""; position: absolute; border-radius: 50%; filter: blur(75px); z-index: -1; }
-.discord-cta:before { width: 430px; height: 430px; left: -120px; top: -160px; background: rgba(129, 140, 248, .20); }
-.discord-cta:after { width: 470px; height: 470px; right: -140px; bottom: -220px; background: rgba(192, 132, 252, .19); }
-.discord-cta .eyebrow { justify-content: center; }
-.discord-cta h2 { font-size: clamp(48px, 6vw, 78px); }
-.discord-cta p:not(.eyebrow) { color: var(--muted); line-height: 1.7; margin: 25px auto; max-width: 480px; }
-.discord-button { border: 0; background: linear-gradient(135deg, #312e81, var(--primary), var(--secondary)); color: white; box-shadow: var(--shadow-button); position: relative; z-index: 2; }
-.discord-button:hover { box-shadow: 0 11px 25px rgba(79, 70, 229, .35); }
-
 footer { min-height: 120px; padding: 30px max(24px, calc((100vw - 1280px) / 2)); display: flex; align-items: center; gap: 40px; border-top: 1px solid var(--border); background: var(--surface); font-size: 12px; }
 footer p { color: var(--muted); margin-right: auto; }
 .footer-brand { font-size: 15px; }
@@ -198,8 +180,6 @@ footer > div a { color: #475569; text-underline-offset: 4px; }
   .next-up { margin-top: 18px; transform: none; }
   .next-up:hover { transform: translateY(-3px); }
   .featured-meta { grid-template-columns: 1fr; }
-  .pulse { padding-top: 18px; padding-bottom: 18px; flex-wrap: wrap; gap: 10px 28px; }
-  .pulse > div { width: 100%; }
   .section { padding-top: 82px; padding-bottom: 82px; }
   .event-grid { grid-template-columns: 1fr; }
   .event-card:last-child:nth-child(odd) { grid-column: auto; }
@@ -210,10 +190,10 @@ footer > div a { color: #475569; text-underline-offset: 4px; }
   .meetup-info h3 { font-size: 16px; }
   .meetup-info p { font-size: 12px; }
   .section-footer { align-items: flex-start; gap: 15px; }
-  .discord-cta { padding: 90px 22px; }
   footer { padding-top: 35px; padding-bottom: 35px; flex-wrap: wrap; gap: 18px; }
   footer p { width: 100%; order: 3; margin: 0; }
-  .site-header nav { gap: 0; }
+  .site-header nav { gap: 9px; }
+  .discord-icon { width: 40px; height: 40px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

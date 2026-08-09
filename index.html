@@ -33,8 +33,9 @@
       <span>PoGo <b>Boekenberg</b></span>
     </a>
     <nav aria-label="Main navigation">
-      <a href="#meetups">Meetups</a>
-      <a href="#events">In-game events</a>
+      <a class="discord-icon" href="https://discord.gg/QMDWYzHccS" target="_blank" rel="noopener" aria-label="Join PoGo Boekenberg on Discord" title="Join Discord">
+        <img src="https://cdn.simpleicons.org/discord/ffffff" alt="" aria-hidden="true">
+      </a>
       <a class="nav-map" data-map-link href="../map/">Open map <span aria-hidden="true">↗</span></a>
     </nav>
   </header>
@@ -49,7 +50,6 @@
         <p class="hero-intro">Meet up, explore Boekenberg, and never miss the bonuses worth playing for.</p>
         <div class="hero-actions">
           <a class="button primary" data-map-link href="../map/">Explore the live map <span aria-hidden="true">↗</span></a>
-          <a class="button secondary" href="https://discord.gg/QMDWYzHccS" target="_blank" rel="noopener">Join our Discord</a>
           <button class="button secondary install-button" id="installApp" type="button" hidden>Install app <span aria-hidden="true">↓</span></button>
         </div>
       </div>
@@ -61,12 +61,6 @@
           <div class="skeleton line-skeleton short"></div>
         </div>
       </aside>
-    </section>
-
-    <section class="pulse" aria-label="Community quick links">
-      <div><span class="live-dot"></span><p><strong>Community map</strong><small>Research, raids &amp; S2 planning</small></p></div>
-      <a data-map-link href="../map/">View the map <span aria-hidden="true">→</span></a>
-      <a href="https://discord.gg/QMDWYzHccS" target="_blank" rel="noopener">Chat on Discord <span aria-hidden="true">→</span></a>
     </section>
 
     <section id="events" class="section events-section">
@@ -94,19 +88,12 @@
         <div class="meetup-row loading-row"><div class="skeleton date-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div>
       </div>
     </section>
-
-    <section class="discord-cta">
-      <p class="eyebrow"><span></span> The conversation continues</p>
-      <h2>Raids are better<br>with <em>company.</em></h2>
-      <p>Coordinate raids, share catches, and get help from local trainers.</p>
-      <a class="button discord-button" href="https://discord.gg/QMDWYzHccS" target="_blank" rel="noopener">Join PoGo Boekenberg on Discord <span aria-hidden="true">↗</span></a>
-    </section>
   </main>
 
   <footer>
     <a class="brand footer-brand" href="./"><span class="brand-mark" aria-hidden="true"><i></i></span><span>PoGo <b>Boekenberg</b></span></a>
     <p>Made for trainers around Boekenbergpark.</p>
-    <div><a data-map-link href="../map/">Map</a><a href="#meetups">Meetups</a><a href="https://discord.gg/QMDWYzHccS" target="_blank" rel="noopener">Discord</a></div>
+    <div><a data-map-link href="../map/">Map</a><a href="#events">Events</a><a href="#meetups">Meetups</a></div>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/long@3.2.0/dist/long.min.js"></script>
