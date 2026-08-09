@@ -118,8 +118,8 @@
       }).join("")}</div></div>` : "";
       return `<article class="event-card">
         <div class="event-content"><div class="event-meta"><span class="event-type">${escapeHtml(event.eventType || "Live event")}</span><p class="event-timer" data-countdown="${escapeHtml(end.toISOString())}">${relativeTime(end)}</p></div><h3>${escapeHtml(event.name || event.heading || "Pokémon GO event")}</h3>
-        ${bonuses.length ? `<ul class="bonus-list">${bonuses.map(bonus => `<li>${escapeHtml(bonus)}</li>`).join("")}</ul>` : '<ul class="bonus-list"><li>Event details are available from the source</li></ul>'}
-        ${bossMarkup}<a class="event-link" href="${escapeHtml(safeUrl(event.link) || "https://leekduck.com/events/")}" target="_blank" rel="noopener">Full event details ↗</a></div>
+        ${bonuses.length ? `<ul class="bonus-list">${bonuses.map(bonus => `<li>${escapeHtml(bonus)}</li>`).join("")}</ul>` : ""}
+        ${bossMarkup}<a class="event-link" href="${escapeHtml(safeUrl(event.link) || "https://leekduck.com/events/")}" target="_blank" rel="noopener">View event ↗</a></div>
       </article>`;
     }).join("");
   }
