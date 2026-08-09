@@ -129,17 +129,33 @@
     return "+";
   }
 
+  function usefulBonuses(bonuses, limit = 2) {
+    const priority = text => /raid pass/i.test(text) ? 10 : /stardust/i.test(text) ? 9 : /egg|hatch/i.test(text) ? 8 : /candy/i.test(text) ? 7 : /\bxp\b/i.test(text) ? 6 : /trade/i.test(text) ? 5 : 1;
+    return [...bonuses].sort((first, second) => priority(second) - priority(first)).slice(0, limit);
+  }
+
+  function startsIn(target, now = Date.now()) {
+    const text = relativeTime(target, now);
+    return text === "ending now" ? "starting now" : `starts in ${text.replace(/ left$/, "")}`;
+  }
+
+  function renderBonusCard({ bonus, event, time }, upcoming = false) {
+    const link = safeUrl(event.link) || "https://leekduck.com/events/";
+    const countdown = upcoming ? startsIn(time) : relativeTime(time);
+    return `<a class="bonus-card${upcoming ? " upcoming-bonus" : ""}" href="${escapeHtml(link)}" target="_blank" rel="noopener"><span class="bonus-mark" aria-hidden="true">${escapeHtml(bonusMark(bonus))}</span><span class="bonus-copy"><b>${escapeHtml(bonus)}</b><small>${escapeHtml(event.name || "Live event")} · <i data-countdown="${escapeHtml(time.toISOString())}"${upcoming ? ' data-countdown-mode="starts"' : ""}>${countdown}</i></small></span><span class="bonus-arrow" aria-hidden="true">↗</span></a>`;
+  }
+
   async function renderEvents(events, pokemonData) {
     const now = Date.now();
     const active = events.filter(event => {
       const start = localDate(event.start), end = localDate(event.end);
       return start && end && start.getTime() <= now && end.getTime() > now;
-    }).sort((a, b) => eventScore(b) - eventScore(a) || localDate(a.end) - localDate(b.end)).slice(0, 10);
-    if (!active.length) {
-      $("#featuredPokemon").innerHTML = '<div class="empty-state">No featured boss rotation is active right now.</div>';
-      $("#activeBonuses").innerHTML = '<div class="empty-state">No event-wide bonuses are listed as active right now.</div>';
-      return;
-    }
+    }).sort((a, b) => eventScore(b) - eventScore(a) || localDate(a.end) - localDate(b.end)).slice(0, 8);
+    const upcoming = events.filter(event => {
+      const start = localDate(event.start), end = localDate(event.end);
+      const type = String(event.eventType || "");
+      return start && end && start.getTime() > now && end.getTime() > now && !/^(?:raid-battles|max-mondays|go-battle-league|raid-hour)$/i.test(type);
+    }).sort((a, b) => localDate(a.start) - localDate(b.start)).slice(0, 8);
 
     const featured = [], seenFeatured = new Set();
     for (const event of active) {
@@ -163,15 +179,27 @@
       </a></article>`;
     }).join("") : '<div class="empty-state">No featured boss rotation is active right now.</div>';
 
-    const bonusGroups = await Promise.all(active.map(async event => ({ event, bonuses: await liveEventBonuses(event) })));
+    const [bonusGroups, upcomingBonusGroups] = await Promise.all([
+      Promise.all(active.map(async event => ({ event, bonuses: await liveEventBonuses(event) }))),
+      Promise.all(upcoming.map(async event => ({ event, bonuses: await liveEventBonuses(event) })))
+    ]);
     const bonusItems = [], seenBonuses = new Set();
-    for (const { event, bonuses } of bonusGroups) for (const bonus of bonuses) {
+    for (const { event, bonuses } of bonusGroups) for (const bonus of usefulBonuses(bonuses)) {
       const key = bonus.toLocaleLowerCase("en");
       if (seenBonuses.has(key)) continue;
       seenBonuses.add(key);
       bonusItems.push({ bonus, event, end: localDate(event.end) });
     }
-    $("#activeBonuses").innerHTML = bonusItems.length ? bonusItems.slice(0, 10).map(({ bonus, event, end }) => `<a class="bonus-card" href="${escapeHtml(safeUrl(event.link) || "https://leekduck.com/events/")}" target="_blank" rel="noopener"><span class="bonus-mark" aria-hidden="true">${escapeHtml(bonusMark(bonus))}</span><span class="bonus-copy"><b>${escapeHtml(bonus)}</b><small>${escapeHtml(event.name || "Live event")} · <i data-countdown="${escapeHtml(end.toISOString())}">${relativeTime(end)}</i></small></span><span class="bonus-arrow" aria-hidden="true">↗</span></a>`).join("") : '<div class="empty-state">No event-wide bonuses are listed as active right now.</div>';
+    $("#activeBonuses").innerHTML = bonusItems.length ? bonusItems.slice(0, 8).map(item => renderBonusCard({ bonus: item.bonus, event: item.event, time: item.end })).join("") : '<div class="empty-state compact-empty">No event-wide bonuses are active right now.</div>';
+
+    const upcomingBonusItems = [], seenUpcomingBonuses = new Set();
+    for (const { event, bonuses } of upcomingBonusGroups) for (const bonus of usefulBonuses(bonuses)) {
+      const key = bonus.toLocaleLowerCase("en");
+      if (seenUpcomingBonuses.has(key)) continue;
+      seenUpcomingBonuses.add(key);
+      upcomingBonusItems.push({ bonus, event, start: localDate(event.start) });
+    }
+    $("#upcomingBonuses").innerHTML = upcomingBonusItems.length ? upcomingBonusItems.slice(0, 8).map(item => renderBonusCard({ bonus: item.bonus, event: item.event, time: item.start }, true)).join("") : '<div class="empty-state compact-empty">No upcoming event bonuses have been announced yet.</div>';
   }
 
   function unfoldIcs(text) { return text.replace(/\r?\n[ \t]/g, ""); }
@@ -314,6 +342,7 @@
     } catch {
       $("#featuredPokemon").innerHTML = '<div class="empty-state">The featured Pokémon feed could not be reached.</div>';
       $("#activeBonuses").innerHTML = '<div class="empty-state">The active bonuses feed could not be reached.</div>';
+      $("#upcomingBonuses").innerHTML = '<div class="empty-state">The upcoming bonuses feed could not be reached.</div>';
       $("#eventFreshness").textContent = "Live data temporarily unavailable";
     }
   }
@@ -352,7 +381,7 @@
   function updateCountdowns() {
     $$('[data-countdown]').forEach(element => {
       const end = localDate(element.dataset.countdown);
-      if (end) element.textContent = relativeTime(end);
+      if (end) element.textContent = element.dataset.countdownMode === "starts" ? startsIn(end) : relativeTime(end);
     });
   }
 

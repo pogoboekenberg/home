@@ -77,11 +77,15 @@
             <div class="compact-skeleton"><div class="skeleton icon-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div>
           </div>
         </section>
-        <section class="event-group" aria-labelledby="active-bonuses-title">
-          <div class="event-group-heading"><div><p>Active bonuses</p><h3 id="active-bonuses-title">Boosts worth using</h3></div><span>Live event effects</span></div>
-          <div id="activeBonuses" class="bonus-grid" aria-live="polite">
-            <div class="compact-skeleton"><div class="skeleton icon-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div>
-            <div class="compact-skeleton"><div class="skeleton icon-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div>
+        <section class="event-group" aria-labelledby="bonuses-title">
+          <div class="event-group-heading"><div><p>Gameplay bonuses</p><h3 id="bonuses-title">Now and coming up</h3></div><span>Event effects</span></div>
+          <div class="bonus-columns">
+            <div class="bonus-column"><h4><span class="status-dot active"></span>Active now</h4><div id="activeBonuses" class="bonus-grid" aria-live="polite">
+              <div class="compact-skeleton"><div class="skeleton icon-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div>
+            </div></div>
+            <div class="bonus-column"><h4><span class="status-dot upcoming"></span>Coming up</h4><div id="upcomingBonuses" class="bonus-grid" aria-live="polite">
+              <div class="compact-skeleton"><div class="skeleton icon-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div>
+            </div></div>
           </div>
         </section>
       </div>
