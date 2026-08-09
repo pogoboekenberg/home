@@ -109,10 +109,14 @@ a:focus-visible, button:focus-visible { outline: 3px solid rgba(79, 70, 229, .35
 .featured-mon-top h4 { margin: 1px 0 0; font-size: 16px; letter-spacing: -.025em; }
 .featured-mon-top > span { flex: 0 0 auto; color: #047857; font-size: 8px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 .featured-mon-info > small { display: block; margin-top: 4px; color: var(--muted); font-size: 9px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pokemon-cp { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); }
-.pokemon-cp b, .pokemon-cp span { display: block; }
-.pokemon-cp b { color: var(--primary); font-size: 13px; }
-.pokemon-cp span { margin-top: 3px; color: var(--muted); font-size: 9px; }
+.pokemon-cp { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); display: grid; grid-template-columns: repeat(auto-fit, minmax(82px, 1fr)); gap: 9px; }
+.cp-stat { min-width: 0; display: block; }
+.cp-stat small, .cp-stat b { display: block; }
+.cp-stat small { margin-bottom: 3px; color: var(--muted); font-size: 8px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cp-stat b { color: var(--primary); font-size: 13px; white-space: nowrap; }
+.cp-stat.boosted { padding-left: 9px; border-left: 2px solid #a7f3d0; }
+.cp-stat.boosted small { color: #047857; }
+.cp-stat.boosted b { color: #065f46; font-size: 14px; }
 .bonus-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
 .bonus-column { min-width: 0; }
 .bonus-column h4 { display: flex; align-items: center; gap: 8px; margin: 0 0 11px; color: #475569; font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }

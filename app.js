@@ -225,7 +225,7 @@
       return `<article class="featured-pokemon-card"><a href="${escapeHtml(link)}" target="_blank" rel="noopener">
         <div class="featured-mon-art">${boss.image ? `<img src="${escapeHtml(boss.image)}" alt="" loading="lazy">` : `<span aria-hidden="true">${escapeHtml(name.charAt(0))}</span>`}</div>
         <div class="featured-mon-info"><div class="featured-mon-top"><h4>${escapeHtml(name)}</h4><span data-countdown="${escapeHtml(end.toISOString())}">${relativeTime(end)}</span></div><small>${escapeHtml(event.name || "Featured battle")}</small>
-        <div class="pokemon-cp"><b>${normal ? `${normal.toLocaleString()} CP` : "CP unavailable"}</b>${boosted ? `<span>${boosted.toLocaleString()} boosted${weather ? ` · ${escapeHtml(weather)}` : ""}</span>` : ""}</div></div>
+        <div class="pokemon-cp"><span class="cp-stat"><small>Normal</small><b>${normal ? `${normal.toLocaleString()} CP` : "Unavailable"}</b></span>${boosted ? `<span class="cp-stat boosted"><small>Boosted${weather ? ` · ${escapeHtml(weather)}` : ""}</small><b>${boosted.toLocaleString()} CP</b></span>` : ""}</div></div>
       </a></article>`;
     }).join("") : '<div class="empty-state">No featured boss rotation is active right now.</div>';
 
