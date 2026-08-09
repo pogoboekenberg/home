@@ -14,7 +14,7 @@
   let raidBossFilter = (() => {
     try {
       const saved = localStorage.getItem(RAID_BOSS_FILTER_KEY);
-      return saved === "mega" || saved === "five" ? saved : "five";
+      return saved === "mega" || saved === "five" || saved === "both" ? saved : "five";
     } catch { return "five"; }
   })();
   const localDate = value => {
@@ -264,9 +264,13 @@
   }
 
   function renderRaidBossRows() {
-    const label = raidBossFilter === "mega" ? "Mega" : "5-star";
-    const activeMatches = activeRaidBossEntries.filter(item => raidBossTier(item) === raidBossFilter);
-    const upcomingMatches = upcomingRaidBossEntries.filter(item => raidBossTier(item) === raidBossFilter);
+    const label = raidBossFilter === "mega" ? "Mega" : raidBossFilter === "five" ? "5-star" : "raid";
+    const matchesFilter = item => {
+      const tier = raidBossTier(item);
+      return tier !== "max" && (raidBossFilter === "both" || tier === raidBossFilter);
+    };
+    const activeMatches = activeRaidBossEntries.filter(matchesFilter);
+    const upcomingMatches = upcomingRaidBossEntries.filter(matchesFilter);
     $("#featuredPokemon").innerHTML = activeMatches.length
       ? activeMatches.slice(0, 8).map(item => renderFeaturedPokemon(item)).join("")
       : `<div class="empty-state compact-empty">No ${label} boss rotation is active right now.</div>`;
