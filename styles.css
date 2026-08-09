@@ -47,6 +47,10 @@ a:focus-visible, button:focus-visible { outline: 3px solid rgba(79, 70, 229, .35
 .site-header nav { display: flex; align-items: center; gap: 32px; font-size: 14px; font-weight: 600; }
 .site-header nav a { text-decoration: none; transition: color .2s ease; }
 .site-header nav a:not(.nav-map):hover { color: var(--primary); }
+.language-toggle { display: flex; flex: 0 0 auto; gap: 2px; padding: 3px; border: 1px solid var(--border); border-radius: 10px; background: rgba(255, 255, 255, .9); box-shadow: 0 2px 8px rgba(15, 23, 42, .04); }
+.language-toggle button { min-width: 29px; min-height: 29px; padding: 5px 7px; border: 0; border-radius: 7px; color: var(--muted); background: transparent; font: inherit; font-size: 9px; font-weight: 800; letter-spacing: .05em; cursor: pointer; transition: color .2s ease, background .2s ease, box-shadow .2s ease; }
+.language-toggle button:hover { color: var(--primary); }
+.language-toggle button.active { color: #fff; background: linear-gradient(135deg, var(--primary), var(--secondary)); box-shadow: 0 2px 7px rgba(79, 70, 229, .28); }
 .discord-icon { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 50%; background: #5865f2; box-shadow: 0 4px 14px rgba(88, 101, 242, .25); transition: transform .2s ease, box-shadow .2s ease !important; }
 .discord-icon img { width: 21px; height: 21px; display: block; }
 .discord-icon:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(88, 101, 242, .32); }
@@ -269,6 +273,7 @@ footer > div a { color: #475569; text-underline-offset: 4px; }
 @media (max-width: 620px) {
   .site-header { height: 70px; }
   .brand { font-size: 16px; }
+  .site-header .brand > span:last-child { display: none; }
   .nav-map { padding: 10px 14px; }
   .hero { padding-top: 58px; padding-bottom: 75px; min-height: auto; }
   .hero h1 { font-size: 44px; }
@@ -291,6 +296,7 @@ footer > div a { color: #475569; text-underline-offset: 4px; }
   footer { padding-top: 35px; padding-bottom: 35px; flex-wrap: wrap; gap: 18px; }
   footer p { width: 100%; order: 3; margin: 0; }
   .site-header nav { gap: 9px; }
+  .language-toggle button { min-width: 27px; min-height: 27px; padding: 4px 6px; }
   .discord-icon { width: 40px; height: 40px; }
   .hub-hero { min-height: 470px; }
   .hub-section { padding-top: 54px; }

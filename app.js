@@ -9,6 +9,43 @@
   const MEETUP_MAP_QUERY = `query HomeMeetups($input: RealityChannelMapObjectsByS2CellsInput!) { realityChannelMapObjectsByS2Cells(input: $input) { mapObjectsByS2CellsAndTypes { mapObjectsByType { type mapObjects { id event { id location eventTime eventEndTime mapObjectLocation { latitude longitude } campfireLiveEvent { eventType id } } } } } } }`;
   const MEETUP_DETAIL_QUERY = `query HomeMeetupDetails($id: ID!) { event(id: $id) { id name address eventTime eventEndTime members(first: 1) { totalCount } campfireLiveEvent { eventName eventType id } } }`;
   const RAID_BOSS_FILTER_KEY = "pogo-home-raid-boss-filter-v1";
+  const LANGUAGE_KEY = "pogo-home-language-v1";
+  let currentLanguage = (() => {
+    try {
+      const saved = localStorage.getItem(LANGUAGE_KEY);
+      if (saved === "en" || saved === "nl") return saved;
+    } catch {}
+    return /^nl\b/i.test(navigator.language || "") ? "nl" : "en";
+  })();
+  let latestEvents = null, latestPokemonData = [], latestMeetups = null;
+  const TRANSLATION_PAIRS = [
+    ["Language", "Taal"], ["Global navigation", "Hoofdnavigatie"], ["Community pages", "Communitypagina's"],
+    ["Join Discord", "Word lid van Discord"], ["Join PoGo Boekenberg on Discord", "Word lid van PoGo Boekenberg op Discord"], ["Open map", "Kaart openen"], ["Map", "Kaart"],
+    ["Bonuses", "Bonussen"], ["Perfect CP", "Perfecte CP"], ["Deurne · Antwerp", "Deurne · Antwerpen"], ["Your local", "Jouw lokale"],
+    ["community.", "community."], ["meetups.", "meetups."],
+    ["Meet up, explore Boekenberg, and never miss the bonuses worth playing for.", "Spreek af, verken Boekenberg en mis geen enkele bonus die de moeite waard is."],
+    ["Choose what you need: local meetups, useful in-game bonuses, or perfect raid CP.", "Kies wat je nodig hebt: lokale meetups, nuttige in-gamebonussen of perfecte raid-CP."],
+    ["Explore the live map", "Bekijk de live kaart"], ["Install app", "App installeren"], ["Community essentials", "Community-info"],
+    ["Three focused", "Drie overzichtelijke"], ["pages.", "pagina's."], ["No dashboard clutter—open the page for the information you want.", "Geen druk dashboard—open alleen de pagina met de informatie die je zoekt."],
+    ["Play together", "Samen spelen"], ["Upcoming local events, Campfire links, and check-in rewards.", "Komende lokale evenementen, Campfire-links en check-inbeloningen."],
+    ["Worth knowing", "Handig om te weten"], ["Current and upcoming gameplay bonuses, split into free and paid.", "Huidige en komende gameplaybonussen, opgesplitst in gratis en betaald."],
+    ["Raid ready", "Klaar voor raids"], ["Current hundo catch CP and upcoming 5★ and Mega rotations.", "Huidige hundo vang-CP en komende 5★- en Mega-rotaties."],
+    ["Made for trainers around Boekenbergpark.", "Gemaakt voor trainers rond het Boekenbergpark."],
+    ["Upcoming", "Komende"], ["Community Ambassador events around Boekenbergpark and Te Boelaarpark, synced from Campfire.", "Community Ambassador-evenementen rond het Boekenbergpark en Te Boelaarpark, gesynchroniseerd met Campfire."],
+    ["Next community meetup", "Volgende community-meetup"], ["Loading…", "Laden…"], ["Coming up", "Binnenkort"], ["Local", "Lokale"], ["calendar.", "kalender."],
+    ["Open any meetup on Campfire or add the full community feed to your calendar.", "Open een meetup op Campfire of voeg de volledige communitykalender toe aan je agenda."], ["Add all to calendar", "Alles aan agenda toevoegen"],
+    ["Live in-game", "Live in-game"], ["Useful", "Nuttige"], ["bonuses.", "bonussen."], ["Current and upcoming gameplay effects, condensed to the bonuses that change how you play.", "Huidige en komende gameplay-effecten, beperkt tot de bonussen die echt invloed hebben op hoe je speelt."],
+    ["Gameplay bonuses", "Gameplaybonussen"], ["Now and coming up", "Nu en binnenkort"], ["Free and paid marked", "Gratis en betaald aangeduid"], ["Active now", "Nu actief"],
+    ["Checking the live event feed…", "Live eventfeed controleren…"], ["All game events", "Alle game-events"],
+    ["Perfect", "Perfecte"], ["catch CP.", "vang-CP."], ["Current hundo CP and the upcoming weekly boss schedule. Upcoming cards stay compact until their rotation starts.", "Huidige hundo-CP en het komende wekelijkse bazenschema. Komende kaarten blijven compact tot hun rotatie begint."],
+    ["Featured Pokémon", "Uitgelichte Pokémon"], ["Hundo CP at a glance", "Hundo-CP in één oogopslag"], ["Upcoming weekly raid bosses", "Komende wekelijkse raidbazen"], ["All raid events", "Alle raid-events"],
+    ["When", "Wanneer"], ["Where", "Waar"], ["Going", "Aanwezig"], ["Check-in rewards", "Check-inbeloningen"], ["Featured Pokémon CP", "Uitgelichte Pokémon-CP"],
+    ["View meetup on Campfire", "Bekijk meetup op Campfire"], ["Join the community", "Word lid van de community"], ["Check Discord", "Bekijk Discord"],
+    ["Normal", "Normaal"], ["Boosted", "Weerboost"], ["Unavailable", "Niet beschikbaar"], ["CP unavailable", "CP niet beschikbaar"], ["Free", "Gratis"], ["Paid", "Betaald"],
+    ["New meetup dates coming soon.", "Nieuwe meetupdata volgen binnenkort."], ["To be announced", "Nog aan te kondigen"], ["Could not refresh", "Kon niet vernieuwen"], ["Live data temporarily unavailable", "Live data tijdelijk niet beschikbaar"]
+  ];
+  const EN_TO_NL = new Map(TRANSLATION_PAIRS), NL_TO_EN = new Map(TRANSLATION_PAIRS.map(([english, dutch]) => [dutch, english]));
+  const tr = (english, dutch) => currentLanguage === "nl" ? dutch : english;
   let activeRaidBossEntries = [];
   let upcomingRaidBossEntries = [];
   let raidBossFilters = (() => {
@@ -31,15 +68,59 @@
   const calendarLink = $("#calendarLink");
   if (calendarLink) calendarLink.href = CONFIG.meetupCalendarUrl;
 
+  function translateStaticValue(value) {
+    const english = NL_TO_EN.get(value) || value;
+    return currentLanguage === "nl" ? EN_TO_NL.get(english) || value : english;
+  }
+
+  function applyLanguage() {
+    document.documentElement.lang = currentLanguage;
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    let node;
+    while ((node = walker.nextNode())) {
+      if (/^(?:SCRIPT|STYLE)$/i.test(node.parentElement?.tagName || "")) continue;
+      const trimmed = node.nodeValue.trim();
+      if (!trimmed) continue;
+      const translated = translateStaticValue(trimmed);
+      if (translated !== trimmed) node.nodeValue = node.nodeValue.replace(trimmed, translated);
+    }
+    $$('[aria-label], [title]').forEach(element => {
+      for (const attribute of ["aria-label", "title"]) {
+        const value = element.getAttribute(attribute);
+        if (value) element.setAttribute(attribute, translateStaticValue(value));
+      }
+    });
+    $$('[data-language]').forEach(button => {
+      const active = button.dataset.language === currentLanguage;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
+    const pageTitle = document.body.classList.contains("meetups-page") ? tr("Meetups · PoGo Boekenberg", "Meetups · PoGo Boekenberg") : document.body.classList.contains("bonuses-page") ? tr("Bonuses · PoGo Boekenberg", "Bonussen · PoGo Boekenberg") : document.body.classList.contains("cp-page") ? tr("Perfect CP · PoGo Boekenberg", "Perfecte CP · PoGo Boekenberg") : tr("PoGo Boekenberg · Home", "PoGo Boekenberg · Home");
+    document.title = pageTitle;
+  }
+
+  function registerLanguageToggle() {
+    $$('[data-language]').forEach(button => button.addEventListener("click", () => {
+      const language = button.dataset.language;
+      if (language !== "en" && language !== "nl" || language === currentLanguage) return;
+      currentLanguage = language;
+      try { localStorage.setItem(LANGUAGE_KEY, currentLanguage); } catch {}
+      applyLanguage();
+      updateCountdowns();
+      if (latestMeetups) renderMeetups(latestMeetups);
+      if (latestEvents) renderEvents(latestEvents, latestPokemonData).then(applyLanguage);
+    }));
+  }
+
   function relativeTime(target, now = Date.now()) {
     const milliseconds = target.getTime() - now;
-    if (milliseconds <= 0) return "ending now";
+    if (milliseconds <= 0) return tr("ending now", "eindigt nu");
     const minutes = Math.ceil(milliseconds / 60000);
-    if (minutes < 60) return `${minutes}m left`;
+    if (minutes < 60) return tr(`${minutes}m left`, `${minutes} min over`);
     const hours = Math.ceil(minutes / 60);
-    if (hours < 24) return `${hours}h left`;
+    if (hours < 24) return tr(`${hours}h left`, `${hours}u over`);
     const days = Math.ceil(hours / 24);
-    return `${days}d left`;
+    return tr(`${days}d left`, `${days}d over`);
   }
 
   function eventBonuses(event) {
@@ -221,14 +302,16 @@
 
   function startsIn(target, now = Date.now()) {
     const text = relativeTime(target, now);
-    return text === "ending now" ? "starting now" : `starts in ${text.replace(/ left$/, "")}`;
+    if (text === "ending now" || text === "eindigt nu") return tr("starting now", "begint nu");
+    const duration = text.replace(/(?: left| over)$/, "");
+    return tr(`starts in ${duration}`, `begint over ${duration}`);
   }
 
   function bonusTitleMarkup(bonus) {
     const split = String(bonus).match(/^(.*?)\s*\(Free:\s*(.*?)\s*·\s*Paid:\s*(.*?)\)$/i);
-    if (split) return `<b>${escapeHtml(split[1])}</b><span class="bonus-access"><i class="free-tier">Free ${escapeHtml(split[2])}</i><i class="paid-tier">Paid ${escapeHtml(split[3])}</i></span>`;
+    if (split) return `<b>${escapeHtml(split[1])}</b><span class="bonus-access"><i class="free-tier">${tr("Free", "Gratis")} ${escapeHtml(split[2])}</i><i class="paid-tier">${tr("Paid", "Betaald")} ${escapeHtml(split[3])}</i></span>`;
     const paid = String(bonus).match(/^(.*?)\s*\(Paid:\s*(.*?)\)$/i);
-    if (paid) return `<b>${escapeHtml(paid[1])}</b><span class="bonus-access"><i class="paid-tier">Paid ${escapeHtml(paid[2])}</i></span>`;
+    if (paid) return `<b>${escapeHtml(paid[1])}</b><span class="bonus-access"><i class="paid-tier">${tr("Paid", "Betaald")} ${escapeHtml(paid[2])}</i></span>`;
     return `<b>${escapeHtml(bonus)}</b>`;
   }
 
@@ -251,7 +334,7 @@
     return `<article class="featured-pokemon-card${upcoming ? " upcoming-raid-card" : ""}${shadow ? " shadow-boss-card" : ""}"><a href="${escapeHtml(link)}" target="_blank" rel="noopener">
       <div class="featured-mon-art${shadow ? " shadow" : ""}">${boss.image ? `<img src="${escapeHtml(boss.image)}" alt="" loading="lazy">` : `<span aria-hidden="true">${escapeHtml(name.charAt(0))}</span>`}</div>
       <div class="featured-mon-info"><div class="featured-mon-top"><h4>${shadow ? '<i class="shadow-chip">Shadow</i>' : ""}${escapeHtml(name)}</h4><span data-countdown="${escapeHtml(time.toISOString())}"${upcoming ? ' data-countdown-mode="starts"' : ""}>${countdown}</span></div>
-      ${upcoming ? "" : `<div class="pokemon-cp"><span class="cp-stat"><small>Normal</small><b>${normal ? `${normal.toLocaleString()} CP` : "Unavailable"}</b></span>${boosted ? `<span class="cp-stat boosted"><small>Boosted${weather ? ` · ${escapeHtml(weather)}` : ""}</small><b>${boosted.toLocaleString()} CP</b></span>` : ""}</div>`}</div>
+      ${upcoming ? "" : `<div class="pokemon-cp"><span class="cp-stat"><small>${tr("Normal", "Normaal")}</small><b>${normal ? `${normal.toLocaleString()} CP` : tr("Unavailable", "Niet beschikbaar")}</b></span>${boosted ? `<span class="cp-stat boosted"><small>${tr("Boosted", "Weerboost")}${weather ? ` · ${escapeHtml(weather)}` : ""}</small><b>${boosted.toLocaleString()} CP</b></span>` : ""}</div>`}</div>
     </a></article>`;
   }
 
@@ -276,11 +359,12 @@
     const activeTarget = $("#featuredPokemon"), upcomingTarget = $("#upcomingRaidBosses");
     if (activeTarget) activeTarget.innerHTML = activeMatches.length
       ? activeMatches.slice(0, 8).map(item => renderFeaturedPokemon(item)).join("")
-      : `<div class="empty-state compact-empty">${raidBossFilters.size ? `No ${label} boss rotation is active right now.` : "Choose 5★, Mega, or both above."}</div>`;
+      : `<div class="empty-state compact-empty">${raidBossFilters.size ? tr(`No ${label} boss rotation is active right now.`, `Er is momenteel geen passende ${label === "raid" ? "raidbaas" : label + "-baas"}-rotatie actief.`) : tr("Choose 5★, Mega, or both above.", "Kies hierboven 5★, Mega of beide.")}</div>`;
     if (upcomingTarget) upcomingTarget.innerHTML = upcomingMatches.length
       ? upcomingMatches.slice(0, 8).map(item => renderFeaturedPokemon(item, true)).join("")
-      : `<div class="empty-state compact-empty">${raidBossFilters.size ? `No upcoming ${label} rotation has been announced yet.` : "Choose 5★, Mega, or both above."}</div>`;
+      : `<div class="empty-state compact-empty">${raidBossFilters.size ? tr(`No upcoming ${label} rotation has been announced yet.`, `Er is nog geen komende ${label === "raid" ? "raid" : label}-rotatie aangekondigd.`) : tr("Choose 5★, Mega, or both above.", "Kies hierboven 5★, Mega of beide.")}</div>`;
     syncRaidBossToggle();
+    applyLanguage();
   }
 
   function registerRaidBossToggle() {
@@ -295,6 +379,8 @@
   }
 
   async function renderEvents(events, pokemonData) {
+    latestEvents = events;
+    latestPokemonData = pokemonData;
     const now = Date.now();
     const active = events.filter(event => {
       const start = localDate(event.start), end = localDate(event.end);
@@ -347,7 +433,7 @@
       bonusItems.push({ bonus, event, end: localDate(event.end) });
     }
     const activeBonusTarget = $("#activeBonuses");
-    if (activeBonusTarget) activeBonusTarget.innerHTML = bonusItems.length ? bonusItems.slice(0, 8).map(item => renderBonusCard({ bonus: item.bonus, event: item.event, time: item.end })).join("") : '<div class="empty-state compact-empty">No event-wide bonuses are active right now.</div>';
+    if (activeBonusTarget) activeBonusTarget.innerHTML = bonusItems.length ? bonusItems.slice(0, 8).map(item => renderBonusCard({ bonus: item.bonus, event: item.event, time: item.end })).join("") : `<div class="empty-state compact-empty">${tr("No event-wide bonuses are active right now.", "Er zijn momenteel geen algemene evenementbonussen actief.")}</div>`;
 
     const upcomingBonusItems = [], seenUpcomingBonuses = new Set();
     for (const { event, bonuses } of upcomingBonusGroups) for (const bonus of usefulBonuses(bonuses)) {
@@ -357,7 +443,8 @@
       upcomingBonusItems.push({ bonus, event, start: localDate(event.start) });
     }
     const upcomingBonusTarget = $("#upcomingBonuses");
-    if (upcomingBonusTarget) upcomingBonusTarget.innerHTML = upcomingBonusItems.length ? upcomingBonusItems.slice(0, 8).map(item => renderBonusCard({ bonus: item.bonus, event: item.event, time: item.start }, true)).join("") : '<div class="empty-state compact-empty">No upcoming event bonuses have been announced yet.</div>';
+    if (upcomingBonusTarget) upcomingBonusTarget.innerHTML = upcomingBonusItems.length ? upcomingBonusItems.slice(0, 8).map(item => renderBonusCard({ bonus: item.bonus, event: item.event, time: item.start }, true)).join("") : `<div class="empty-state compact-empty">${tr("No upcoming event bonuses have been announced yet.", "Er zijn nog geen komende evenementbonussen aangekondigd.")}</div>`;
+    applyLanguage();
   }
 
   function unfoldIcs(text) { return text.replace(/\r?\n[ \t]/g, ""); }
@@ -378,7 +465,8 @@
   }
 
   function dateParts(date) {
-    return { day: new Intl.DateTimeFormat(undefined, { day: "2-digit" }).format(date), month: new Intl.DateTimeFormat(undefined, { month: "short" }).format(date), weekday: new Intl.DateTimeFormat(undefined, { weekday: "short" }).format(date), time: new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit" }).format(date) };
+    const locale = currentLanguage === "nl" ? "nl-BE" : undefined;
+    return { day: new Intl.DateTimeFormat(locale, { day: "2-digit" }).format(date), month: new Intl.DateTimeFormat(locale, { month: "short" }).format(date), weekday: new Intl.DateTimeFormat(locale, { weekday: "short" }).format(date), time: new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit" }).format(date) };
   }
 
   function expectedMeetupRewards(event) {
@@ -399,12 +487,12 @@
   function renderCheckInRewards(event) {
     const rewards = expectedMeetupRewards(event);
     if (!rewards.length) return "";
-    return `<div class="checkin-rewards"><span>Check-in rewards</span><ul>${rewards.map(reward => `<li title="${escapeHtml(reward.label)}" aria-label="${escapeHtml(reward.label)}"><img src="${escapeHtml(reward.image)}" alt="" loading="lazy" decoding="async">${reward.amount ? `<b>${escapeHtml(reward.amount)}</b>` : ""}</li>`).join("")}</ul></div>`;
+    return `<div class="checkin-rewards"><span>${tr("Check-in rewards", "Check-inbeloningen")}</span><ul>${rewards.map(reward => `<li title="${escapeHtml(reward.label)}" aria-label="${escapeHtml(reward.label)}"><img src="${escapeHtml(reward.image)}" alt="" loading="lazy" decoding="async">${reward.amount ? `<b>${escapeHtml(reward.amount)}</b>` : ""}</li>`).join("")}</ul></div>`;
   }
 
   function renderMeetupBossCp(event) {
     if (!event.bossCp?.length) return "";
-    return `<div class="meetup-boss-cp"><span>Featured Pokémon CP</span><ul>${event.bossCp.map(boss => `<li>${boss.image ? `<img src="${escapeHtml(boss.image)}" alt="" loading="lazy" decoding="async">` : ""}<span><b>${escapeHtml(boss.name)}</b><small>${boss.normal ? `${boss.normal.toLocaleString()} CP` : "CP unavailable"}${boss.boosted ? ` · ${boss.boosted.toLocaleString()} boosted${boss.weather ? ` · ${escapeHtml(boss.weather)}` : ""}` : ""}</small></span></li>`).join("")}</ul></div>`;
+    return `<div class="meetup-boss-cp"><span>${tr("Featured Pokémon CP", "Uitgelichte Pokémon-CP")}</span><ul>${event.bossCp.map(boss => `<li>${boss.image ? `<img src="${escapeHtml(boss.image)}" alt="" loading="lazy" decoding="async">` : ""}<span><b>${escapeHtml(boss.name)}</b><small>${boss.normal ? `${boss.normal.toLocaleString()} CP` : tr("CP unavailable", "CP niet beschikbaar")}${boss.boosted ? ` · ${boss.boosted.toLocaleString()} ${tr("boosted", "weerboost")}${boss.weather ? ` · ${escapeHtml(boss.weather)}` : ""}` : ""}</small></span></li>`).join("")}</ul></div>`;
   }
 
   function eventMatchWords(value) {
@@ -452,25 +540,30 @@
   }
 
   function renderMeetups(meetups) {
+    latestMeetups = meetups;
     if (!meetups.length) {
-      $("#featuredMeetup").innerHTML = '<h3>New meetup dates coming soon.</h3><p>Join Discord to hear when the next local event is announced.</p><a href="https://discord.gg/QMDWYzHccS" target="_blank" rel="noopener">Join the community ↗</a>';
-      $("#meetupStatus").textContent = "To be announced";
-      $("#meetupList").innerHTML = '<div class="empty-state">No upcoming meetup has been published on Campfire yet.</div>';
+      $("#featuredMeetup").innerHTML = `<h3>${tr("New meetup dates coming soon.", "Nieuwe meetupdata volgen binnenkort.")}</h3><p>${tr("Join Discord to hear when the next local event is announced.", "Word lid van Discord om te horen wanneer het volgende lokale evenement wordt aangekondigd.")}</p><a href="https://discord.gg/QMDWYzHccS" target="_blank" rel="noopener">${tr("Join the community", "Word lid van de community")} ↗</a>`;
+      $("#meetupStatus").textContent = tr("To be announced", "Nog aan te kondigen");
+      $("#meetupList").innerHTML = `<div class="empty-state">${tr("No upcoming meetup has been published on Campfire yet.", "Er is nog geen komende meetup op Campfire gepubliceerd.")}</div>`;
+      applyLanguage();
       return;
     }
     const first = meetups[0], firstDate = dateParts(first.start);
-    $("#meetupStatus").textContent = first.start.getTime() - Date.now() < 86400000 ? "Coming up" : `${Math.ceil((first.start.getTime() - Date.now()) / 86400000)} days away`;
-    $("#featuredMeetup").innerHTML = `<h3>${escapeHtml(first.name || "Community Ambassador Meetup")}</h3><div class="featured-meta"><div><span>When</span><b>${escapeHtml(`${firstDate.weekday} ${firstDate.day} ${firstDate.month} · ${firstDate.time}`)}</b></div><div><span>Where</span><b>${escapeHtml(first.location || "Boekenbergpark")}</b></div>${Number.isFinite(first.rsvpCount) ? `<div><span>Going</span><b>${first.rsvpCount.toLocaleString()} trainer${first.rsvpCount === 1 ? "" : "s"}</b></div>` : ""}</div>${renderMeetupBossCp(first)}${renderCheckInRewards(first)}${first.url ? `<a href="${escapeHtml(first.url)}" target="_blank" rel="noopener">View meetup on Campfire ↗</a>` : ""}`;
+    const daysAway = Math.ceil((first.start.getTime() - Date.now()) / 86400000);
+    $("#meetupStatus").textContent = first.start.getTime() - Date.now() < 86400000 ? tr("Coming up", "Binnenkort") : tr(`${daysAway} days away`, `over ${daysAway} dag${daysAway === 1 ? "" : "en"}`);
+    $("#featuredMeetup").innerHTML = `<h3>${escapeHtml(first.name || "Community Ambassador Meetup")}</h3><div class="featured-meta"><div><span>${tr("When", "Wanneer")}</span><b>${escapeHtml(`${firstDate.weekday} ${firstDate.day} ${firstDate.month} · ${firstDate.time}`)}</b></div><div><span>${tr("Where", "Waar")}</span><b>${escapeHtml(first.location || "Boekenbergpark")}</b></div>${Number.isFinite(first.rsvpCount) ? `<div><span>${tr("Going", "Aanwezig")}</span><b>${first.rsvpCount.toLocaleString()} ${tr(`trainer${first.rsvpCount === 1 ? "" : "s"}`, `trainer${first.rsvpCount === 1 ? "" : "s"}`)}</b></div>` : ""}</div>${renderMeetupBossCp(first)}${renderCheckInRewards(first)}${first.url ? `<a href="${escapeHtml(first.url)}" target="_blank" rel="noopener">${tr("View meetup on Campfire", "Bekijk meetup op Campfire")} ↗</a>` : ""}`;
     $("#meetupList").innerHTML = meetups.slice(0, 5).map(event => {
       const date = dateParts(event.start);
-      return `<article class="meetup-row"><div class="meetup-date"><b>${escapeHtml(date.day)}</b><span>${escapeHtml(date.month)}</span></div><div class="meetup-info"><div class="meetup-title-row"><h3>${escapeHtml(event.name || "Community Ambassador Meetup")}</h3>${Number.isFinite(event.rsvpCount) ? `<span class="meetup-going">${event.rsvpCount.toLocaleString()} going</span>` : ""}</div><p>${escapeHtml(`${date.weekday} · ${date.time} · ${event.location || "Boekenbergpark"}`)}</p>${renderMeetupBossCp(event)}${renderCheckInRewards(event)}</div>${event.url ? `<a href="${escapeHtml(event.url)}" target="_blank" rel="noopener" aria-label="Open ${escapeHtml(event.name)}">↗</a>` : ""}</article>`;
+      return `<article class="meetup-row"><div class="meetup-date"><b>${escapeHtml(date.day)}</b><span>${escapeHtml(date.month)}</span></div><div class="meetup-info"><div class="meetup-title-row"><h3>${escapeHtml(event.name || "Community Ambassador Meetup")}</h3>${Number.isFinite(event.rsvpCount) ? `<span class="meetup-going">${event.rsvpCount.toLocaleString()} ${tr("going", "aanwezig")}</span>` : ""}</div><p>${escapeHtml(`${date.weekday} · ${date.time} · ${event.location || "Boekenbergpark"}`)}</p>${renderMeetupBossCp(event)}${renderCheckInRewards(event)}</div>${event.url ? `<a href="${escapeHtml(event.url)}" target="_blank" rel="noopener" aria-label="${tr("Open", "Open")} ${escapeHtml(event.name)}">↗</a>` : ""}</article>`;
     }).join("");
+    applyLanguage();
   }
 
   function renderMeetupFeedError() {
-    $("#featuredMeetup").innerHTML = '<h3>Meetup feed temporarily unavailable.</h3><p>The calendar could not be refreshed. Open Campfire or join Discord for the latest local plans.</p><a href="https://discord.gg/QMDWYzHccS" target="_blank" rel="noopener">Check Discord ↗</a>';
-    $("#meetupStatus").textContent = "Could not refresh";
-    $("#meetupList").innerHTML = '<div class="empty-state">We could not reach the live meetup calendar. Please try again shortly.</div>';
+    $("#featuredMeetup").innerHTML = `<h3>${tr("Meetup feed temporarily unavailable.", "Meetupfeed tijdelijk niet beschikbaar.")}</h3><p>${tr("The calendar could not be refreshed. Open Campfire or join Discord for the latest local plans.", "De kalender kon niet worden vernieuwd. Open Campfire of Discord voor de recentste lokale plannen.")}</p><a href="https://discord.gg/QMDWYzHccS" target="_blank" rel="noopener">${tr("Check Discord", "Bekijk Discord")} ↗</a>`;
+    $("#meetupStatus").textContent = tr("Could not refresh", "Kon niet vernieuwen");
+    $("#meetupList").innerHTML = `<div class="empty-state">${tr("We could not reach the live meetup calendar. Please try again shortly.", "We konden de live meetupkalender niet bereiken. Probeer het straks opnieuw.")}</div>`;
+    applyLanguage();
   }
 
   function distanceMeters(firstLatitude, firstLongitude, secondLatitude, secondLongitude) {
@@ -574,12 +667,16 @@
       const events = Array.isArray(payload) ? payload : payload.events || [];
       await renderEvents(events, pokemonData);
       const freshness = $("#eventFreshness");
-      if (freshness) freshness.textContent = `Live event feed · updated ${new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit" }).format(new Date())}`;
+      const locale = currentLanguage === "nl" ? "nl-BE" : undefined;
+      const updatedAt = new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit" }).format(new Date());
+      if (freshness) freshness.textContent = tr(`Live event feed · updated ${updatedAt}`, `Live eventfeed · bijgewerkt ${updatedAt}`);
+      applyLanguage();
     } catch {
-      const messages = [["#featuredPokemon", "The featured Pokémon feed could not be reached."], ["#upcomingRaidBosses", "The upcoming raid boss feed could not be reached."], ["#activeBonuses", "The active bonuses feed could not be reached."], ["#upcomingBonuses", "The upcoming bonuses feed could not be reached."]];
+      const messages = [["#featuredPokemon", tr("The featured Pokémon feed could not be reached.", "De feed met uitgelichte Pokémon kon niet worden bereikt.")], ["#upcomingRaidBosses", tr("The upcoming raid boss feed could not be reached.", "De feed met komende raidbazen kon niet worden bereikt.")], ["#activeBonuses", tr("The active bonuses feed could not be reached.", "De feed met actieve bonussen kon niet worden bereikt.")], ["#upcomingBonuses", tr("The upcoming bonuses feed could not be reached.", "De feed met komende bonussen kon niet worden bereikt.")]];
       messages.forEach(([selector, message]) => { const target = $(selector); if (target) target.innerHTML = `<div class="empty-state">${message}</div>`; });
       const freshness = $("#eventFreshness");
-      if (freshness) freshness.textContent = "Live data temporarily unavailable";
+      if (freshness) freshness.textContent = tr("Live data temporarily unavailable", "Live data tijdelijk niet beschikbaar");
+      applyLanguage();
     }
   }
 
@@ -648,7 +745,7 @@
         button.hidden = true;
         return;
       }
-      if (isIos) window.alert("In Safari, tap the Share button, then choose Add to Home Screen.");
+      if (isIos) window.alert(tr("In Safari, tap the Share button, then choose Add to Home Screen.", "Tik in Safari op de deelknop en kies daarna 'Zet op beginscherm'."));
     });
   }
 
@@ -657,6 +754,8 @@
     window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js", { scope: "./", updateViaCache: "none" }).then(registration => registration.update()).catch(() => {}));
   }
 
+  registerLanguageToggle();
+  applyLanguage();
   if ($('[data-raid-boss-filter]')) registerRaidBossToggle();
   if ($("#featuredPokemon") || $("#activeBonuses")) loadEvents();
   if ($("#featuredMeetup") || $("#meetupList")) loadMeetups();
