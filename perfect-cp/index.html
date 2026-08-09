@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <base href="../">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#4f46e5">
+  <meta name="description" content="Perfect raid boss catch CP and upcoming weekly Pokémon GO raid rotations.">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="PoGo Boekenberg">
+  <title>Perfect CP · PoGo Boekenberg</title>
+  <link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="assets/app-icon-192.png" type="image/png"><link rel="apple-touch-icon" href="assets/app-icon-180.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"><link rel="stylesheet" href="styles.css">
+</head>
+<body class="content-page cp-page">
+  <header class="site-header"><a class="brand" href="./" aria-label="PoGo Boekenberg home"><span class="brand-mark" aria-hidden="true"><i></i></span><span>PoGo <b>Boekenberg</b></span></a><nav aria-label="Global navigation"><a class="discord-icon" href="https://discord.gg/QMDWYzHccS" target="_blank" rel="noopener" aria-label="Join Discord"><img src="https://cdn.simpleicons.org/discord/ffffff" alt=""></a><a class="nav-map" data-map-link href="../map/">Open map <span aria-hidden="true">↗</span></a></nav></header>
+  <nav class="page-tabs" aria-label="Community pages"><a href="meetups/">Meetups</a><a href="bonuses/">Bonuses</a><a class="active" href="perfect-cp/" aria-current="page">Perfect CP</a></nav>
+  <main>
+    <section class="page-hero"><p class="eyebrow"><span></span> Raid ready</p><h1>Perfect<br><em>catch CP.</em></h1><p>Current hundo CP and the upcoming weekly boss schedule. Upcoming cards stay compact until their rotation starts.</p></section>
+    <section class="section events-section focused-section">
+      <section class="event-group" aria-labelledby="featured-pokemon-title"><div class="event-group-heading"><div><p>Featured Pokémon</p><h3 id="featured-pokemon-title">Hundo CP at a glance</h3></div><div class="raid-toggle" role="group" aria-label="Filter active and upcoming raid bosses"><button type="button" data-raid-boss-filter="five" aria-pressed="false">5★</button><button type="button" data-raid-boss-filter="mega" aria-pressed="false">Mega</button></div></div>
+        <div class="featured-rotation"><h4><span class="status-dot active"></span>Active now</h4><div id="featuredPokemon" class="featured-grid" aria-live="polite"><div class="compact-skeleton"><div class="skeleton icon-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div><div class="compact-skeleton"><div class="skeleton icon-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div></div></div>
+        <div class="featured-rotation"><h4><span class="status-dot upcoming"></span>Upcoming weekly raid bosses</h4><div id="upcomingRaidBosses" class="featured-grid" aria-live="polite"><div class="compact-skeleton"><div class="skeleton icon-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div><div class="compact-skeleton"><div class="skeleton icon-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div></div></div>
+      </section>
+      <div class="section-footer"><p id="eventFreshness">Checking the live event feed…</p><a href="https://leekduck.com/events/" target="_blank" rel="noopener">All raid events <span aria-hidden="true">↗</span></a></div>
+    </section>
+  </main>
+  <footer><a class="brand footer-brand" href="./"><span class="brand-mark" aria-hidden="true"><i></i></span><span>PoGo <b>Boekenberg</b></span></a><p>Made for trainers around Boekenbergpark.</p><div><a href="meetups/">Meetups</a><a href="bonuses/">Bonuses</a><a data-map-link href="../map/">Map</a></div></footer>
+  <script src="config.js"></script><script src="app.js"></script>
+</body>
+</html>

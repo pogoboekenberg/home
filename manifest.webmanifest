@@ -1,5 +1,5 @@
 {
-  "name": "PoGo Boekenberg Home",
+  "name": "PoGo Boekenberg",
   "short_name": "PoGo Boekenberg",
   "description": "Local meetups, live Pokémon GO bonuses, raid hundo CP, and the Boekenberg community map.",
   "id": "./",
@@ -24,5 +24,10 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
+  ],
+  "shortcuts": [
+    { "name": "Meetups", "short_name": "Meetups", "url": "meetups/" },
+    { "name": "Bonuses", "short_name": "Bonuses", "url": "bonuses/" },
+    { "name": "Perfect CP", "short_name": "Perfect CP", "url": "perfect-cp/" }
   ]
 }

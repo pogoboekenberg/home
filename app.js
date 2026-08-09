@@ -28,7 +28,8 @@
 
   $$('[data-map-link]').forEach(link => { link.href = CONFIG.mapUrl || "../map/"; });
   $$('.discord-button, a[href*="discord.gg"]').forEach(link => { link.href = CONFIG.discordUrl || "https://discord.gg/QMDWYzHccS"; });
-  $("#calendarLink").href = CONFIG.meetupCalendarUrl;
+  const calendarLink = $("#calendarLink");
+  if (calendarLink) calendarLink.href = CONFIG.meetupCalendarUrl;
 
   function relativeTime(target, now = Date.now()) {
     const milliseconds = target.getTime() - now;
@@ -272,10 +273,11 @@
     const matchesFilter = item => raidBossFilters.has(raidBossTier(item));
     const activeMatches = activeRaidBossEntries.filter(matchesFilter);
     const upcomingMatches = upcomingRaidBossEntries.filter(matchesFilter);
-    $("#featuredPokemon").innerHTML = activeMatches.length
+    const activeTarget = $("#featuredPokemon"), upcomingTarget = $("#upcomingRaidBosses");
+    if (activeTarget) activeTarget.innerHTML = activeMatches.length
       ? activeMatches.slice(0, 8).map(item => renderFeaturedPokemon(item)).join("")
       : `<div class="empty-state compact-empty">${raidBossFilters.size ? `No ${label} boss rotation is active right now.` : "Choose 5★, Mega, or both above."}</div>`;
-    $("#upcomingRaidBosses").innerHTML = upcomingMatches.length
+    if (upcomingTarget) upcomingTarget.innerHTML = upcomingMatches.length
       ? upcomingMatches.slice(0, 8).map(item => renderFeaturedPokemon(item, true)).join("")
       : `<div class="empty-state compact-empty">${raidBossFilters.size ? `No upcoming ${label} rotation has been announced yet.` : "Choose 5★, Mega, or both above."}</div>`;
     syncRaidBossToggle();
@@ -304,30 +306,34 @@
       return start && end && start.getTime() > now && end.getTime() > now && !/^(?:raid-battles|max-mondays|go-battle-league|raid-hour)$/i.test(type);
     }).sort((a, b) => localDate(a.start) - localDate(b.start)).slice(0, 8);
 
-    const featured = [], seenFeatured = new Set();
-    for (const event of active) {
-      for (const boss of featuredBosses(event)) {
-        const key = String(boss.name).toLocaleLowerCase("en");
-        if (seenFeatured.has(key)) continue;
-        seenFeatured.add(key);
-        featured.push(featuredPokemonEntry(event, boss, pokemonData, localDate(event.end)));
+    if ($("#featuredPokemon")) {
+      const featured = [], seenFeatured = new Set();
+      for (const event of active) {
+        for (const boss of featuredBosses(event)) {
+          const key = String(boss.name).toLocaleLowerCase("en");
+          if (seenFeatured.has(key)) continue;
+          seenFeatured.add(key);
+          featured.push(featuredPokemonEntry(event, boss, pokemonData, localDate(event.end)));
+        }
       }
-    }
-    activeRaidBossEntries = featured;
+      activeRaidBossEntries = featured;
 
-    const upcomingRaids = events.filter(event => {
-      const start = localDate(event.start), end = localDate(event.end);
-      return start && end && start.getTime() > now && end.getTime() > now && String(event.eventType || "").toLocaleLowerCase("en") === "raid-battles";
-    }).sort((a, b) => localDate(a.start) - localDate(b.start));
-    const nextBosses = [], seenNextBosses = new Set();
-    for (const event of upcomingRaids) for (const boss of featuredBosses(event)) {
-      const key = String(boss.name).toLocaleLowerCase("en");
-      if (seenNextBosses.has(key)) continue;
-      seenNextBosses.add(key);
-      nextBosses.push(featuredPokemonEntry(event, boss, pokemonData, localDate(event.start)));
+      const upcomingRaids = events.filter(event => {
+        const start = localDate(event.start), end = localDate(event.end);
+        return start && end && start.getTime() > now && end.getTime() > now && String(event.eventType || "").toLocaleLowerCase("en") === "raid-battles";
+      }).sort((a, b) => localDate(a.start) - localDate(b.start));
+      const nextBosses = [], seenNextBosses = new Set();
+      for (const event of upcomingRaids) for (const boss of featuredBosses(event)) {
+        const key = String(boss.name).toLocaleLowerCase("en");
+        if (seenNextBosses.has(key)) continue;
+        seenNextBosses.add(key);
+        nextBosses.push(featuredPokemonEntry(event, boss, pokemonData, localDate(event.start)));
+      }
+      upcomingRaidBossEntries = nextBosses;
+      renderRaidBossRows();
     }
-    upcomingRaidBossEntries = nextBosses;
-    renderRaidBossRows();
+
+    if (!$("#activeBonuses")) return;
 
     const [bonusGroups, upcomingBonusGroups] = await Promise.all([
       Promise.all(active.map(async event => ({ event, bonuses: await liveEventBonuses(event) }))),
@@ -340,7 +346,8 @@
       seenBonuses.add(key);
       bonusItems.push({ bonus, event, end: localDate(event.end) });
     }
-    $("#activeBonuses").innerHTML = bonusItems.length ? bonusItems.slice(0, 8).map(item => renderBonusCard({ bonus: item.bonus, event: item.event, time: item.end })).join("") : '<div class="empty-state compact-empty">No event-wide bonuses are active right now.</div>';
+    const activeBonusTarget = $("#activeBonuses");
+    if (activeBonusTarget) activeBonusTarget.innerHTML = bonusItems.length ? bonusItems.slice(0, 8).map(item => renderBonusCard({ bonus: item.bonus, event: item.event, time: item.end })).join("") : '<div class="empty-state compact-empty">No event-wide bonuses are active right now.</div>';
 
     const upcomingBonusItems = [], seenUpcomingBonuses = new Set();
     for (const { event, bonuses } of upcomingBonusGroups) for (const bonus of usefulBonuses(bonuses)) {
@@ -349,7 +356,8 @@
       seenUpcomingBonuses.add(key);
       upcomingBonusItems.push({ bonus, event, start: localDate(event.start) });
     }
-    $("#upcomingBonuses").innerHTML = upcomingBonusItems.length ? upcomingBonusItems.slice(0, 8).map(item => renderBonusCard({ bonus: item.bonus, event: item.event, time: item.start }, true)).join("") : '<div class="empty-state compact-empty">No upcoming event bonuses have been announced yet.</div>';
+    const upcomingBonusTarget = $("#upcomingBonuses");
+    if (upcomingBonusTarget) upcomingBonusTarget.innerHTML = upcomingBonusItems.length ? upcomingBonusItems.slice(0, 8).map(item => renderBonusCard({ bonus: item.bonus, event: item.event, time: item.start }, true)).join("") : '<div class="empty-state compact-empty">No upcoming event bonuses have been announced yet.</div>';
   }
 
   function unfoldIcs(text) { return text.replace(/\r?\n[ \t]/g, ""); }
@@ -510,18 +518,18 @@
 
   async function loadEvents() {
     try {
-      const [eventsResponse, pokemonData] = await Promise.all([fetch(CONFIG.eventsUrl, { cache: "no-store" }), loadPokemonData().catch(() => [])]);
+      const [eventsResponse, pokemonData] = await Promise.all([fetch(CONFIG.eventsUrl, { cache: "no-store" }), $("#featuredPokemon") ? loadPokemonData().catch(() => []) : Promise.resolve([])]);
       if (!eventsResponse.ok) throw new Error("Event feed unavailable");
       const payload = await eventsResponse.json();
       const events = Array.isArray(payload) ? payload : payload.events || [];
       await renderEvents(events, pokemonData);
-      $("#eventFreshness").textContent = `Live event feed · updated ${new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit" }).format(new Date())}`;
+      const freshness = $("#eventFreshness");
+      if (freshness) freshness.textContent = `Live event feed · updated ${new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit" }).format(new Date())}`;
     } catch {
-      $("#featuredPokemon").innerHTML = '<div class="empty-state">The featured Pokémon feed could not be reached.</div>';
-      $("#upcomingRaidBosses").innerHTML = '<div class="empty-state">The upcoming raid boss feed could not be reached.</div>';
-      $("#activeBonuses").innerHTML = '<div class="empty-state">The active bonuses feed could not be reached.</div>';
-      $("#upcomingBonuses").innerHTML = '<div class="empty-state">The upcoming bonuses feed could not be reached.</div>';
-      $("#eventFreshness").textContent = "Live data temporarily unavailable";
+      const messages = [["#featuredPokemon", "The featured Pokémon feed could not be reached."], ["#upcomingRaidBosses", "The upcoming raid boss feed could not be reached."], ["#activeBonuses", "The active bonuses feed could not be reached."], ["#upcomingBonuses", "The upcoming bonuses feed could not be reached."]];
+      messages.forEach(([selector, message]) => { const target = $(selector); if (target) target.innerHTML = `<div class="empty-state">${message}</div>`; });
+      const freshness = $("#eventFreshness");
+      if (freshness) freshness.textContent = "Live data temporarily unavailable";
     }
   }
 
@@ -565,6 +573,7 @@
 
   function registerInstallExperience() {
     const button = $("#installApp");
+    if (!button) return;
     const standalone = window.matchMedia?.("(display-mode: standalone)").matches || window.navigator.standalone === true;
     const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
     let installPrompt = null;
@@ -596,9 +605,9 @@
     window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js", { scope: "./", updateViaCache: "none" }).then(registration => registration.update()).catch(() => {}));
   }
 
-  registerRaidBossToggle();
-  loadEvents();
-  loadMeetups();
+  if ($('[data-raid-boss-filter]')) registerRaidBossToggle();
+  if ($("#featuredPokemon") || $("#activeBonuses")) loadEvents();
+  if ($("#featuredMeetup") || $("#meetupList")) loadMeetups();
   updateCountdowns();
   registerInstallExperience();
   registerServiceWorker();

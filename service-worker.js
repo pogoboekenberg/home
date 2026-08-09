@@ -1,4 +1,4 @@
-const CACHE_NAME = "pogo-boekenberg-home-v20";
+const CACHE_NAME = "pogo-boekenberg-home-v21";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -6,6 +6,9 @@ const APP_SHELL = [
   "./config.js",
   "./app.js",
   "./manifest.webmanifest",
+  "./meetups/",
+  "./bonuses/",
+  "./perfect-cp/",
   "./assets/app-icon-180.png",
   "./assets/app-icon-192.png",
   "./assets/app-icon-512.png",
@@ -45,7 +48,7 @@ self.addEventListener("fetch", event => {
   if (url.origin !== self.location.origin) return;
 
   if (event.request.mode === "navigate") {
-    event.respondWith(fetch(event.request).catch(() => caches.match("./index.html")));
+    event.respondWith(fetch(event.request).catch(() => caches.match(event.request).then(cached => cached || caches.match("./index.html"))));
     return;
   }
 

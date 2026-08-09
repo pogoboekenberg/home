@@ -5,6 +5,9 @@ Standalone GitHub Pages homepage for the PoGo Boekenberg community.
 ## Public URL structure
 
 - Homepage: `https://<account>.github.io/home/`
+- Meetups: `https://<account>.github.io/home/meetups/`
+- Bonuses: `https://<account>.github.io/home/bonuses/`
+- Perfect CP: `https://<account>.github.io/home/perfect-cp/`
 - Community map: `https://<account>.github.io/map/`
 
 The map, Discord, Niantic GraphQL meetup source, calendar fallback, and live event data sources are configured in `config.js`.

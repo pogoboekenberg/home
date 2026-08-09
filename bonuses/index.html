@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <base href="../">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#4f46e5">
+  <meta name="description" content="Current and upcoming Pokémon GO gameplay bonuses worth knowing.">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="PoGo Boekenberg">
+  <title>Bonuses · PoGo Boekenberg</title>
+  <link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="assets/app-icon-192.png" type="image/png"><link rel="apple-touch-icon" href="assets/app-icon-180.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"><link rel="stylesheet" href="styles.css">
+</head>
+<body class="content-page bonuses-page">
+  <header class="site-header"><a class="brand" href="./" aria-label="PoGo Boekenberg home"><span class="brand-mark" aria-hidden="true"><i></i></span><span>PoGo <b>Boekenberg</b></span></a><nav aria-label="Global navigation"><a class="discord-icon" href="https://discord.gg/QMDWYzHccS" target="_blank" rel="noopener" aria-label="Join Discord"><img src="https://cdn.simpleicons.org/discord/ffffff" alt=""></a><a class="nav-map" data-map-link href="../map/">Open map <span aria-hidden="true">↗</span></a></nav></header>
+  <nav class="page-tabs" aria-label="Community pages"><a href="meetups/">Meetups</a><a class="active" href="bonuses/" aria-current="page">Bonuses</a><a href="perfect-cp/">Perfect CP</a></nav>
+  <main>
+    <section class="page-hero"><p class="eyebrow"><span></span> Live in-game</p><h1>Useful<br><em>bonuses.</em></h1><p>Current and upcoming gameplay effects, condensed to the bonuses that change how you play.</p></section>
+    <section class="section events-section focused-section">
+      <section class="event-group" aria-labelledby="bonuses-title"><div class="event-group-heading"><div><p>Gameplay bonuses</p><h3 id="bonuses-title">Now and coming up</h3></div><span>Free and paid marked</span></div><div class="bonus-columns"><div class="bonus-column"><h4><span class="status-dot active"></span>Active now</h4><div id="activeBonuses" class="bonus-grid" aria-live="polite"><div class="compact-skeleton"><div class="skeleton icon-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div></div></div><div class="bonus-column"><h4><span class="status-dot upcoming"></span>Coming up</h4><div id="upcomingBonuses" class="bonus-grid" aria-live="polite"><div class="compact-skeleton"><div class="skeleton icon-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div></div></div></div></section>
+      <div class="section-footer"><p id="eventFreshness">Checking the live event feed…</p><a href="https://leekduck.com/events/" target="_blank" rel="noopener">All game events <span aria-hidden="true">↗</span></a></div>
+    </section>
+  </main>
+  <footer><a class="brand footer-brand" href="./"><span class="brand-mark" aria-hidden="true"><i></i></span><span>PoGo <b>Boekenberg</b></span></a><p>Made for trainers around Boekenbergpark.</p><div><a href="meetups/">Meetups</a><a href="perfect-cp/">Perfect CP</a><a data-map-link href="../map/">Map</a></div></footer>
+  <script src="config.js"></script><script src="app.js"></script>
+</body>
+</html>

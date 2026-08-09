@@ -4,19 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#4f46e5">
-  <meta name="description" content="PoGo Boekenberg meetups, live Pokémon GO bonuses, raid hundo CP, and the community map.">
+  <meta name="description" content="PoGo Boekenberg meetups, live Pokémon GO bonuses, perfect raid CP, and the community map.">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="PoGo Boekenberg">
   <meta property="og:type" content="website">
   <meta property="og:title" content="PoGo Boekenberg">
-  <meta property="og:description" content="Meetups, live Pokémon GO events, perfect raid CP, and the community map.">
+  <meta property="og:description" content="Meetups, live game bonuses, perfect raid CP, and the Boekenberg community map.">
   <meta property="og:image" content="https://pogoboekenberg.github.io/home/og.png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="PoGo Boekenberg">
-  <meta name="twitter:description" content="Meetups, live Pokémon GO events, perfect raid CP, and the community map.">
-  <meta name="twitter:image" content="https://pogoboekenberg.github.io/home/og.png">
   <title>PoGo Boekenberg · Home</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/app-icon-192.png" type="image/png">
@@ -28,93 +25,37 @@
 </head>
 <body>
   <header class="site-header">
-    <a class="brand" href="./" aria-label="PoGo Boekenberg home">
-      <span class="brand-mark" aria-hidden="true"><i></i></span>
-      <span>PoGo <b>Boekenberg</b></span>
-    </a>
-    <nav aria-label="Main navigation">
-      <a class="discord-icon" href="https://discord.gg/QMDWYzHccS" target="_blank" rel="noopener" aria-label="Join PoGo Boekenberg on Discord" title="Join Discord">
-        <img src="https://cdn.simpleicons.org/discord/ffffff" alt="" aria-hidden="true">
-      </a>
+    <a class="brand" href="./" aria-label="PoGo Boekenberg home"><span class="brand-mark" aria-hidden="true"><i></i></span><span>PoGo <b>Boekenberg</b></span></a>
+    <nav aria-label="Global navigation">
+      <a class="discord-icon" href="https://discord.gg/QMDWYzHccS" target="_blank" rel="noopener" aria-label="Join PoGo Boekenberg on Discord" title="Join Discord"><img src="https://cdn.simpleicons.org/discord/ffffff" alt="" aria-hidden="true"></a>
       <a class="nav-map" data-map-link href="../map/">Open map <span aria-hidden="true">↗</span></a>
     </nav>
   </header>
 
   <main>
-    <section class="hero">
+    <section class="hero hub-hero">
       <div class="hero-orbit orbit-one" aria-hidden="true"></div>
       <div class="hero-orbit orbit-two" aria-hidden="true"></div>
       <div class="hero-copy">
         <p class="eyebrow"><span></span> Deurne · Antwerp</p>
         <h1>Your local<br><em>Pokémon GO</em><br>community.</h1>
-        <p class="hero-intro">Meet up, explore Boekenberg, and never miss the bonuses worth playing for.</p>
+        <p class="hero-intro">Choose what you need: local meetups, useful in-game bonuses, or perfect raid CP.</p>
         <div class="hero-actions">
           <a class="button primary" data-map-link href="../map/">Explore the live map <span aria-hidden="true">↗</span></a>
           <button class="button secondary install-button" id="installApp" type="button" hidden>Install app <span aria-hidden="true">↓</span></button>
         </div>
       </div>
-      <aside class="next-up" aria-labelledby="next-up-title">
-        <div class="next-up-label"><span>Next community meetup</span><i id="meetupStatus">Loading…</i></div>
-        <div id="featuredMeetup" class="featured-meetup" aria-live="polite">
-          <div class="skeleton title-skeleton"></div>
-          <div class="skeleton line-skeleton"></div>
-          <div class="skeleton line-skeleton short"></div>
-        </div>
-      </aside>
     </section>
 
-    <section id="events" class="section events-section">
-      <div class="section-heading">
-        <div><p class="eyebrow"><span></span> Live in-game</p><h2>Worth knowing <em>right now.</em></h2></div>
-        <p>Featured Pokémon and active gameplay bonuses, separated for a faster scan. Times are shown locally.</p>
+    <section class="section hub-section" aria-labelledby="choose-page-title">
+      <div class="section-heading compact-heading">
+        <div><p class="eyebrow"><span></span> Community essentials</p><h2 id="choose-page-title">Three focused<br><em>pages.</em></h2></div>
+        <p>No dashboard clutter—open the page for the information you want.</p>
       </div>
-      <div class="event-split">
-        <section class="event-group" aria-labelledby="featured-pokemon-title">
-          <div class="event-group-heading">
-            <div><p>Featured Pokémon</p><h3 id="featured-pokemon-title">Hundo CP at a glance</h3></div>
-            <div class="raid-toggle" role="group" aria-label="Filter active and upcoming raid bosses">
-              <button type="button" data-raid-boss-filter="five" aria-pressed="false">5★</button>
-              <button type="button" data-raid-boss-filter="mega" aria-pressed="false">Mega</button>
-            </div>
-          </div>
-          <div class="featured-rotation"><h4><span class="status-dot active"></span>Active now</h4><div id="featuredPokemon" class="featured-grid" aria-live="polite">
-              <div class="compact-skeleton"><div class="skeleton icon-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div>
-              <div class="compact-skeleton"><div class="skeleton icon-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div>
-              <div class="compact-skeleton"><div class="skeleton icon-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div>
-          </div></div>
-          <div class="featured-rotation">
-            <h4><span class="status-dot upcoming"></span>Upcoming weekly raid bosses</h4>
-            <div id="upcomingRaidBosses" class="featured-grid" aria-live="polite">
-              <div class="compact-skeleton"><div class="skeleton icon-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div>
-              <div class="compact-skeleton"><div class="skeleton icon-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div>
-            </div>
-          </div>
-        </section>
-        <section class="event-group" aria-labelledby="bonuses-title">
-          <div class="event-group-heading"><div><p>Gameplay bonuses</p><h3 id="bonuses-title">Now and coming up</h3></div><span>Event effects</span></div>
-          <div class="bonus-columns">
-            <div class="bonus-column"><h4><span class="status-dot active"></span>Active now</h4><div id="activeBonuses" class="bonus-grid" aria-live="polite">
-              <div class="compact-skeleton"><div class="skeleton icon-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div>
-            </div></div>
-            <div class="bonus-column"><h4><span class="status-dot upcoming"></span>Coming up</h4><div id="upcomingBonuses" class="bonus-grid" aria-live="polite">
-              <div class="compact-skeleton"><div class="skeleton icon-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div>
-            </div></div>
-          </div>
-        </section>
-      </div>
-      <div class="section-footer"><p id="eventFreshness">Checking the live event feed…</p><a href="https://leekduck.com/events/" target="_blank" rel="noopener">All game events <span aria-hidden="true">↗</span></a></div>
-    </section>
-
-    <section id="meetups" class="section meetup-section">
-      <div class="meetup-heading">
-        <p class="eyebrow light"><span></span> Play together</p>
-        <h2>Upcoming<br><em>meetups.</em></h2>
-        <p>Community Ambassador meetups at Boekenbergpark and Te Boelaarpark, synced from Campfire.</p>
-        <a class="button light-button" id="calendarLink" href="https://fieldresearch-api.arcaniaxbrennian.workers.dev/api/events.ics">Add all to calendar</a>
-      </div>
-      <div id="meetupList" class="meetup-list" aria-live="polite">
-        <div class="meetup-row loading-row"><div class="skeleton date-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div>
-        <div class="meetup-row loading-row"><div class="skeleton date-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div>
+      <div class="hub-grid">
+        <a class="hub-card meetups" href="meetups/"><span class="hub-number">01</span><div><p>Play together</p><h3>Meetups</h3><span>Upcoming local events, Campfire links, and check-in rewards.</span></div><b aria-hidden="true">↗</b></a>
+        <a class="hub-card bonuses" href="bonuses/"><span class="hub-number">02</span><div><p>Worth knowing</p><h3>Bonuses</h3><span>Current and upcoming gameplay bonuses, split into free and paid.</span></div><b aria-hidden="true">↗</b></a>
+        <a class="hub-card cp" href="perfect-cp/"><span class="hub-number">03</span><div><p>Raid ready</p><h3>Perfect CP</h3><span>Current hundo catch CP and upcoming 5★ and Mega rotations.</span></div><b aria-hidden="true">↗</b></a>
       </div>
     </section>
   </main>
@@ -122,11 +63,9 @@
   <footer>
     <a class="brand footer-brand" href="./"><span class="brand-mark" aria-hidden="true"><i></i></span><span>PoGo <b>Boekenberg</b></span></a>
     <p>Made for trainers around Boekenbergpark.</p>
-    <div><a data-map-link href="../map/">Map</a><a href="#events">Events</a><a href="#meetups">Meetups</a></div>
+    <div><a href="meetups/">Meetups</a><a href="bonuses/">Bonuses</a><a href="perfect-cp/">Perfect CP</a></div>
   </footer>
 
-  <script src="https://cdn.jsdelivr.net/npm/long@3.2.0/dist/long.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/s2-geometry@1.2.10/src/s2geometry.js"></script>
   <script src="config.js"></script>
   <script src="app.js"></script>
 </body>

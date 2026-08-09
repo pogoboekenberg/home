@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <base href="../">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#4f46e5">
+  <meta name="description" content="Upcoming PoGo Boekenberg community meetups and check-in rewards.">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="PoGo Boekenberg">
+  <title>Meetups · PoGo Boekenberg</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/app-icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="assets/app-icon-180.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="content-page meetups-page">
+  <header class="site-header">
+    <a class="brand" href="./" aria-label="PoGo Boekenberg home"><span class="brand-mark" aria-hidden="true"><i></i></span><span>PoGo <b>Boekenberg</b></span></a>
+    <nav aria-label="Global navigation"><a class="discord-icon" href="https://discord.gg/QMDWYzHccS" target="_blank" rel="noopener" aria-label="Join Discord"><img src="https://cdn.simpleicons.org/discord/ffffff" alt=""></a><a class="nav-map" data-map-link href="../map/">Open map <span aria-hidden="true">↗</span></a></nav>
+  </header>
+  <nav class="page-tabs" aria-label="Community pages"><a class="active" href="meetups/" aria-current="page">Meetups</a><a href="bonuses/">Bonuses</a><a href="perfect-cp/">Perfect CP</a></nav>
+
+  <main>
+    <section class="page-hero page-hero-split">
+      <div><p class="eyebrow"><span></span> Play together</p><h1>Upcoming<br><em>meetups.</em></h1><p>Community Ambassador events around Boekenbergpark and Te Boelaarpark, synced from Campfire.</p></div>
+      <aside class="next-up" aria-label="Next community meetup"><div class="next-up-label"><span>Next community meetup</span><i id="meetupStatus">Loading…</i></div><div id="featuredMeetup" class="featured-meetup" aria-live="polite"><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div><div class="skeleton line-skeleton short"></div></div></aside>
+    </section>
+
+    <section class="section meetup-section">
+      <div class="meetup-heading"><p class="eyebrow light"><span></span> Coming up</p><h2>Local<br><em>calendar.</em></h2><p>Open any meetup on Campfire or add the full community feed to your calendar.</p><a class="button light-button" id="calendarLink" href="https://fieldresearch-api.arcaniaxbrennian.workers.dev/api/events.ics">Add all to calendar</a></div>
+      <div id="meetupList" class="meetup-list" aria-live="polite"><div class="meetup-row loading-row"><div class="skeleton date-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div><div class="meetup-row loading-row"><div class="skeleton date-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div></div>
+    </section>
+  </main>
+
+  <footer><a class="brand footer-brand" href="./"><span class="brand-mark" aria-hidden="true"><i></i></span><span>PoGo <b>Boekenberg</b></span></a><p>Made for trainers around Boekenbergpark.</p><div><a href="bonuses/">Bonuses</a><a href="perfect-cp/">Perfect CP</a><a data-map-link href="../map/">Map</a></div></footer>
+  <script src="https://cdn.jsdelivr.net/npm/long@3.2.0/dist/long.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/s2-geometry@1.2.10/src/s2geometry.js"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
