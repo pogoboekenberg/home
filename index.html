@@ -70,20 +70,20 @@
       </div>
       <div class="event-split">
         <section class="event-group" aria-labelledby="featured-pokemon-title">
-          <div class="event-group-heading"><div><p>Featured Pokémon</p><h3 id="featured-pokemon-title">Hundo CP at a glance</h3></div><span>100% IV catch CP</span></div>
+          <div class="event-group-heading">
+            <div><p>Featured Pokémon</p><h3 id="featured-pokemon-title">Hundo CP at a glance</h3></div>
+            <div class="raid-toggle" role="group" aria-label="Raid boss type for active and upcoming rotations">
+              <button type="button" data-raid-boss-filter="five" aria-pressed="false">5★</button>
+              <button type="button" data-raid-boss-filter="mega" aria-pressed="false">Mega</button>
+            </div>
+          </div>
           <div class="featured-rotation"><h4><span class="status-dot active"></span>Active now</h4><div id="featuredPokemon" class="featured-grid" aria-live="polite">
               <div class="compact-skeleton"><div class="skeleton icon-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div>
               <div class="compact-skeleton"><div class="skeleton icon-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div>
               <div class="compact-skeleton"><div class="skeleton icon-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div>
           </div></div>
           <div class="featured-rotation">
-            <div class="featured-rotation-heading">
-              <h4><span class="status-dot upcoming"></span>Upcoming weekly raid bosses</h4>
-              <div class="raid-toggle" role="group" aria-label="Upcoming raid boss type">
-                <button type="button" class="active" data-raid-boss-filter="five" aria-pressed="true">5★</button>
-                <button type="button" data-raid-boss-filter="mega" aria-pressed="false">Mega</button>
-              </div>
-            </div>
+            <h4><span class="status-dot upcoming"></span>Upcoming weekly raid bosses</h4>
             <div id="upcomingRaidBosses" class="featured-grid" aria-live="polite">
               <div class="compact-skeleton"><div class="skeleton icon-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div>
               <div class="compact-skeleton"><div class="skeleton icon-skeleton"></div><div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div></div></div>

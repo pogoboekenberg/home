@@ -105,7 +105,6 @@ a:focus-visible, button:focus-visible { outline: 3px solid rgba(79, 70, 229, .35
 .event-group-heading > span { color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
 .featured-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 13px; }
 .featured-rotation + .featured-rotation { margin-top: 28px; }
-.featured-rotation-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 11px; }
 .featured-pokemon-card { min-width: 0; border: 1px solid #e7eafd; border-radius: 15px; background: var(--surface); box-shadow: 0 3px 14px rgba(79, 70, 229, .07); transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
 .featured-pokemon-card:hover { transform: translateY(-3px); border-color: #cfd6ff; box-shadow: var(--shadow-card); }
 .featured-pokemon-card > a { min-height: 128px; display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 13px; padding: 15px; text-decoration: none; }
@@ -134,8 +133,7 @@ a:focus-visible, button:focus-visible { outline: 3px solid rgba(79, 70, 229, .35
 .cp-stat.boosted b { color: #065f46; font-size: 14px; }
 .bonus-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
 .bonus-column { min-width: 0; }
-.bonus-column h4, .featured-rotation > h4, .featured-rotation-heading h4 { display: flex; align-items: center; gap: 8px; margin: 0 0 11px; color: #475569; font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
-.featured-rotation-heading h4 { margin: 0; }
+.bonus-column h4, .featured-rotation > h4 { display: flex; align-items: center; gap: 8px; margin: 0 0 11px; color: #475569; font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
 .raid-toggle { flex: 0 0 auto; display: flex; gap: 3px; padding: 3px; border: 1px solid var(--border); border-radius: 10px; background: #f1f5f9; }
 .raid-toggle button { min-height: 29px; padding: 5px 10px; border: 0; border-radius: 7px; color: var(--muted); background: transparent; font: inherit; font-size: 9px; font-weight: 800; cursor: pointer; }
 .raid-toggle button.active { color: #fff; background: linear-gradient(135deg, var(--primary), var(--secondary)); box-shadow: 0 2px 7px rgba(79, 70, 229, .24); }
@@ -231,7 +229,6 @@ footer > div a { color: #475569; text-underline-offset: 4px; }
   .featured-grid, .bonus-grid { grid-template-columns: 1fr; }
   .bonus-columns { grid-template-columns: 1fr; gap: 26px; }
   .event-group-heading { align-items: start; }
-  .featured-rotation-heading { align-items: flex-start; }
   .event-group-heading > span { display: none; }
   .meetup-row { grid-template-columns: 68px 1fr auto; gap: 14px; }
   .meetup-date { padding-right: 13px; }

@@ -8,8 +8,15 @@
   const safeUrl = value => /^https:\/\//i.test(String(value || "")) ? String(value) : "";
   const MEETUP_MAP_QUERY = `query HomeMeetups($input: RealityChannelMapObjectsByS2CellsInput!) { realityChannelMapObjectsByS2Cells(input: $input) { mapObjectsByS2CellsAndTypes { mapObjectsByType { type mapObjects { id event { id location eventTime eventEndTime mapObjectLocation { latitude longitude } campfireLiveEvent { eventType id } } } } } } }`;
   const MEETUP_DETAIL_QUERY = `query HomeMeetupDetails($id: ID!) { event(id: $id) { id name address eventTime eventEndTime campfireLiveEvent { eventName eventType id } } }`;
+  const RAID_BOSS_FILTER_KEY = "pogo-home-raid-boss-filter-v1";
+  let activeRaidBossEntries = [];
   let upcomingRaidBossEntries = [];
-  let upcomingRaidBossFilter = "five";
+  let raidBossFilter = (() => {
+    try {
+      const saved = localStorage.getItem(RAID_BOSS_FILTER_KEY);
+      return saved === "mega" || saved === "five" ? saved : "five";
+    } catch { return "five"; }
+  })();
   const localDate = value => {
     const date = new Date(value);
     return Number.isFinite(date.getTime()) ? date : null;
@@ -243,26 +250,38 @@
     </a></article>`;
   }
 
-  function upcomingRaidTier({ boss, event }) {
+  function raidBossTier({ boss, event }) {
+    if (boss?.isMaxBattle) return "max";
     return /\b(?:mega|primal)\b/i.test(`${boss?.name || ""} ${event?.name || ""} ${event?.heading || ""}`) ? "mega" : "five";
   }
 
-  function renderUpcomingRaidBosses() {
-    const matches = upcomingRaidBossEntries.filter(item => upcomingRaidTier(item) === upcomingRaidBossFilter);
-    $("#upcomingRaidBosses").innerHTML = matches.length
-      ? matches.slice(0, 8).map(item => renderFeaturedPokemon(item, true)).join("")
-      : `<div class="empty-state compact-empty">No upcoming ${upcomingRaidBossFilter === "mega" ? "Mega" : "5-star"} rotation has been announced yet.</div>`;
+  function syncRaidBossToggle() {
     $$('[data-raid-boss-filter]').forEach(button => {
-      const active = button.dataset.raidBossFilter === upcomingRaidBossFilter;
+      const active = button.dataset.raidBossFilter === raidBossFilter;
       button.classList.toggle("active", active);
       button.setAttribute("aria-pressed", String(active));
     });
   }
 
-  function registerUpcomingRaidToggle() {
+  function renderRaidBossRows() {
+    const label = raidBossFilter === "mega" ? "Mega" : "5-star";
+    const activeMatches = activeRaidBossEntries.filter(item => raidBossTier(item) === raidBossFilter);
+    const upcomingMatches = upcomingRaidBossEntries.filter(item => raidBossTier(item) === raidBossFilter);
+    $("#featuredPokemon").innerHTML = activeMatches.length
+      ? activeMatches.slice(0, 8).map(item => renderFeaturedPokemon(item)).join("")
+      : `<div class="empty-state compact-empty">No ${label} boss rotation is active right now.</div>`;
+    $("#upcomingRaidBosses").innerHTML = upcomingMatches.length
+      ? upcomingMatches.slice(0, 8).map(item => renderFeaturedPokemon(item, true)).join("")
+      : `<div class="empty-state compact-empty">No upcoming ${label} rotation has been announced yet.</div>`;
+    syncRaidBossToggle();
+  }
+
+  function registerRaidBossToggle() {
+    syncRaidBossToggle();
     $$('[data-raid-boss-filter]').forEach(button => button.addEventListener("click", () => {
-      upcomingRaidBossFilter = button.dataset.raidBossFilter;
-      renderUpcomingRaidBosses();
+      raidBossFilter = button.dataset.raidBossFilter;
+      try { localStorage.setItem(RAID_BOSS_FILTER_KEY, raidBossFilter); } catch {}
+      renderRaidBossRows();
     }));
   }
 
@@ -287,7 +306,7 @@
         featured.push(featuredPokemonEntry(event, boss, pokemonData, localDate(event.end)));
       }
     }
-    $("#featuredPokemon").innerHTML = featured.length ? featured.slice(0, 8).map(item => renderFeaturedPokemon(item)).join("") : '<div class="empty-state">No featured boss rotation is active right now.</div>';
+    activeRaidBossEntries = featured;
 
     const upcomingRaids = events.filter(event => {
       const start = localDate(event.start), end = localDate(event.end);
@@ -301,7 +320,7 @@
       nextBosses.push(featuredPokemonEntry(event, boss, pokemonData, localDate(event.start)));
     }
     upcomingRaidBossEntries = nextBosses;
-    renderUpcomingRaidBosses();
+    renderRaidBossRows();
 
     const [bonusGroups, upcomingBonusGroups] = await Promise.all([
       Promise.all(active.map(async event => ({ event, bonuses: await liveEventBonuses(event) }))),
@@ -570,7 +589,7 @@
     window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js", { scope: "./", updateViaCache: "none" }).then(registration => registration.update()).catch(() => {}));
   }
 
-  registerUpcomingRaidToggle();
+  registerRaidBossToggle();
   loadEvents();
   loadMeetups();
   updateCountdowns();
