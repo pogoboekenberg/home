@@ -7,7 +7,7 @@
   const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
   const safeUrl = value => /^https:\/\//i.test(String(value || "")) ? String(value) : "";
   const MEETUP_MAP_QUERY = `query HomeMeetups($input: RealityChannelMapObjectsByS2CellsInput!) { realityChannelMapObjectsByS2Cells(input: $input) { mapObjectsByS2CellsAndTypes { mapObjectsByType { type mapObjects { id event { id location eventTime eventEndTime mapObjectLocation { latitude longitude } campfireLiveEvent { eventType id } } } } } } }`;
-  const MEETUP_DETAIL_QUERY = `query HomeMeetupDetails($id: ID!) { event(id: $id) { id name address eventTime eventEndTime campfireLiveEvent { eventName eventType id } } }`;
+  const MEETUP_DETAIL_QUERY = `query HomeMeetupDetails($id: ID!) { event(id: $id) { id name address eventTime eventEndTime members(first: 1) { totalCount } campfireLiveEvent { eventName eventType id } } }`;
   const RAID_BOSS_FILTER_KEY = "pogo-home-raid-boss-filter-v1";
   let activeRaidBossEntries = [];
   let upcomingRaidBossEntries = [];
@@ -402,6 +402,55 @@
     return `<div class="checkin-rewards"><span>Check-in rewards</span><ul>${rewards.map(reward => `<li title="${escapeHtml(reward.label)}" aria-label="${escapeHtml(reward.label)}"><img src="${escapeHtml(reward.image)}" alt="" loading="lazy" decoding="async">${reward.amount ? `<b>${escapeHtml(reward.amount)}</b>` : ""}</li>`).join("")}</ul></div>`;
   }
 
+  function renderMeetupBossCp(event) {
+    if (!event.bossCp?.length) return "";
+    return `<div class="meetup-boss-cp"><span>Featured Pokémon CP</span><ul>${event.bossCp.map(boss => `<li>${boss.image ? `<img src="${escapeHtml(boss.image)}" alt="" loading="lazy" decoding="async">` : ""}<span><b>${escapeHtml(boss.name)}</b><small>${boss.normal ? `${boss.normal.toLocaleString()} CP` : "CP unavailable"}${boss.boosted ? ` · ${boss.boosted.toLocaleString()} boosted${boss.weather ? ` · ${escapeHtml(boss.weather)}` : ""}` : ""}</small></span></li>`).join("")}</ul></div>`;
+  }
+
+  function eventMatchWords(value) {
+    const ignored = new Set(["pokemon", "event", "during", "global", "meetup", "ambassador", "2026"]);
+    return new Set(String(value || "").normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("en").split(/[^a-z0-9]+/).filter(word => word.length > 2 && !ignored.has(word)));
+  }
+
+  function gameEventForMeetup(meetup, events) {
+    const start = meetup.start, end = meetup.end || start;
+    if (!start) return null;
+    const sourceWords = eventMatchWords(`${meetup.name || ""} ${meetup.liveEventName || ""} ${meetup.eventType || ""}`);
+    if (!sourceWords.size) return null;
+    let best = null;
+    for (const event of events) {
+      const eventStart = localDate(event.start), eventEnd = localDate(event.end) || eventStart;
+      if (!eventStart || !eventEnd || start.getTime() > eventEnd.getTime() + 21600000 || end.getTime() < eventStart.getTime() - 21600000) continue;
+      const candidateWords = eventMatchWords(`${event.name || ""} ${event.eventType || ""} ${event.heading || ""}`);
+      const shared = [...sourceWords].filter(word => candidateWords.has(word)).length;
+      const similarity = shared / Math.max(1, Math.min(sourceWords.size, candidateWords.size));
+      const distance = Math.abs(eventStart.getTime() - start.getTime()) / 86400000;
+      const score = similarity * 10 - Math.min(3, distance);
+      if (shared && (!best || score > best.score)) best = { event, score };
+    }
+    return best?.score >= 3 ? best.event : null;
+  }
+
+  async function enrichMeetupsWithBossCp(meetups) {
+    try {
+      const [eventsResponse, pokemonData] = await Promise.all([fetch(CONFIG.eventsUrl, { cache: "no-store" }), loadPokemonData()]);
+      if (!eventsResponse.ok) return meetups;
+      const payload = await eventsResponse.json();
+      const events = Array.isArray(payload) ? payload : payload.events || [];
+      return meetups.map(meetup => {
+        const gameEvent = gameEventForMeetup(meetup, events);
+        if (!gameEvent) return meetup;
+        const bossCp = featuredBosses(gameEvent).map(boss => {
+          const stats = pokemonStatsForBoss(boss, pokemonData);
+          const shadow = /\bshadow\b/i.test(`${boss.name || ""} ${gameEvent.name || ""}`);
+          const name = shadow && !/^shadow\b/i.test(boss.name) ? `Shadow ${boss.name}` : boss.name;
+          return { name, image: boss.image || "", normal: pokemonCp(stats, .59740001), boosted: boss.isMaxBattle ? null : pokemonCp(stats, .667934), weather: weatherTypes(stats) };
+        }).filter(boss => boss.name);
+        return bossCp.length ? { ...meetup, bossCp } : meetup;
+      });
+    } catch { return meetups; }
+  }
+
   function renderMeetups(meetups) {
     if (!meetups.length) {
       $("#featuredMeetup").innerHTML = '<h3>New meetup dates coming soon.</h3><p>Join Discord to hear when the next local event is announced.</p><a href="https://discord.gg/QMDWYzHccS" target="_blank" rel="noopener">Join the community ↗</a>';
@@ -411,10 +460,10 @@
     }
     const first = meetups[0], firstDate = dateParts(first.start);
     $("#meetupStatus").textContent = first.start.getTime() - Date.now() < 86400000 ? "Coming up" : `${Math.ceil((first.start.getTime() - Date.now()) / 86400000)} days away`;
-    $("#featuredMeetup").innerHTML = `<h3>${escapeHtml(first.name || "Community Ambassador Meetup")}</h3><div class="featured-meta"><div><span>When</span><b>${escapeHtml(`${firstDate.weekday} ${firstDate.day} ${firstDate.month} · ${firstDate.time}`)}</b></div><div><span>Where</span><b>${escapeHtml(first.location || "Boekenbergpark")}</b></div></div>${renderCheckInRewards(first)}${first.url ? `<a href="${escapeHtml(first.url)}" target="_blank" rel="noopener">View meetup on Campfire ↗</a>` : ""}`;
+    $("#featuredMeetup").innerHTML = `<h3>${escapeHtml(first.name || "Community Ambassador Meetup")}</h3><div class="featured-meta"><div><span>When</span><b>${escapeHtml(`${firstDate.weekday} ${firstDate.day} ${firstDate.month} · ${firstDate.time}`)}</b></div><div><span>Where</span><b>${escapeHtml(first.location || "Boekenbergpark")}</b></div>${Number.isFinite(first.rsvpCount) ? `<div><span>Going</span><b>${first.rsvpCount.toLocaleString()} trainer${first.rsvpCount === 1 ? "" : "s"}</b></div>` : ""}</div>${renderMeetupBossCp(first)}${renderCheckInRewards(first)}${first.url ? `<a href="${escapeHtml(first.url)}" target="_blank" rel="noopener">View meetup on Campfire ↗</a>` : ""}`;
     $("#meetupList").innerHTML = meetups.slice(0, 5).map(event => {
       const date = dateParts(event.start);
-      return `<article class="meetup-row"><div class="meetup-date"><b>${escapeHtml(date.day)}</b><span>${escapeHtml(date.month)}</span></div><div class="meetup-info"><h3>${escapeHtml(event.name || "Community Ambassador Meetup")}</h3><p>${escapeHtml(`${date.weekday} · ${date.time} · ${event.location || "Boekenbergpark"}`)}</p>${renderCheckInRewards(event)}</div>${event.url ? `<a href="${escapeHtml(event.url)}" target="_blank" rel="noopener" aria-label="Open ${escapeHtml(event.name)}">↗</a>` : ""}</article>`;
+      return `<article class="meetup-row"><div class="meetup-date"><b>${escapeHtml(date.day)}</b><span>${escapeHtml(date.month)}</span></div><div class="meetup-info"><div class="meetup-title-row"><h3>${escapeHtml(event.name || "Community Ambassador Meetup")}</h3>${Number.isFinite(event.rsvpCount) ? `<span class="meetup-going">${event.rsvpCount.toLocaleString()} going</span>` : ""}</div><p>${escapeHtml(`${date.weekday} · ${date.time} · ${event.location || "Boekenbergpark"}`)}</p>${renderMeetupBossCp(event)}${renderCheckInRewards(event)}</div>${event.url ? `<a href="${escapeHtml(event.url)}" target="_blank" rel="noopener" aria-label="Open ${escapeHtml(event.name)}">↗</a>` : ""}</article>`;
     }).join("");
   }
 
@@ -474,7 +523,8 @@
         end: localDate(details.eventEndTime) || meetup.end,
         eventType: String(details.campfireLiveEvent?.eventType || meetup.eventType || ""),
         liveEventId: String(details.campfireLiveEvent?.id || meetup.liveEventId || ""),
-        liveEventName: String(details.campfireLiveEvent?.eventName || meetup.liveEventName || "")
+        liveEventName: String(details.campfireLiveEvent?.eventName || meetup.liveEventName || ""),
+        rsvpCount: Math.max(0, Number(details.members?.totalCount) || 0)
       };
     } catch { return meetup; }
   }
@@ -534,14 +584,15 @@
   }
 
   async function loadMeetups() {
-    const cacheKey = "pogo-home-meetups-v1";
+    const cacheKey = "pogo-home-meetups-v2";
     let graphqlSucceeded = false;
     try {
       const meetups = await loadMeetupsFromGraphql();
       graphqlSucceeded = true;
       if (meetups.length) {
-        cacheMeetups(cacheKey, meetups);
-        renderMeetups(meetups);
+        const enriched = await enrichMeetupsWithBossCp(meetups);
+        cacheMeetups(cacheKey, enriched);
+        renderMeetups(enriched);
         return;
       }
     } catch {}
@@ -549,8 +600,9 @@
       const response = await fetch(CONFIG.meetupCalendarUrl, { cache: "no-store" });
       if (!response.ok) throw new Error("Meetup feed unavailable");
       const meetups = parseMeetups(await response.text());
-      cacheMeetups(cacheKey, meetups);
-      renderMeetups(meetups);
+      const enriched = await enrichMeetupsWithBossCp(meetups);
+      cacheMeetups(cacheKey, enriched);
+      renderMeetups(enriched);
       return;
     } catch {}
     if (graphqlSucceeded) {

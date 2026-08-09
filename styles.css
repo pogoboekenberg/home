@@ -113,9 +113,18 @@ a:focus-visible, button:focus-visible { outline: 3px solid rgba(79, 70, 229, .35
 .next-up-label i { font-style: normal; color: #047857; background: #d1fae5; border-radius: 999px; padding: 6px 9px; letter-spacing: 0; text-transform: none; }
 .featured-meetup { padding: 28px 27px 26px; min-height: 204px; }
 .featured-meetup h3 { font-size: 27px; line-height: 1.15; letter-spacing: -.04em; margin: 0 0 22px; }
-.featured-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding-top: 17px; border-top: 1px solid var(--border); }
+.featured-meta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding-top: 17px; border-top: 1px solid var(--border); }
 .featured-meta span { font-size: 10px; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); display: block; }
 .featured-meta b { display: block; margin-top: 5px; font-size: 13px; }
+.meetup-boss-cp { margin-top: 15px; padding-top: 14px; border-top: 1px solid var(--border); }
+.meetup-boss-cp > span { display: block; margin-bottom: 8px; color: var(--primary); font-size: 8px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.meetup-boss-cp ul { display: flex; flex-wrap: wrap; gap: 7px; margin: 0; padding: 0; list-style: none; }
+.meetup-boss-cp li { min-width: 150px; display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 8px; align-items: center; padding: 7px 9px; border: 1px solid #dfe4ff; border-radius: 10px; background: #f8faff; }
+.meetup-boss-cp img { width: 34px; height: 34px; object-fit: contain; }
+.meetup-boss-cp li > span { min-width: 0; }
+.meetup-boss-cp li b, .meetup-boss-cp li small { display: block; }
+.meetup-boss-cp li b { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meetup-boss-cp li small { margin-top: 3px; color: var(--muted); font-size: 8px; line-height: 1.35; }
 .checkin-rewards { margin-top: 14px; }
 .checkin-rewards > span { display: block; margin-bottom: 7px; color: var(--muted); font-size: 8px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
 .checkin-rewards ul { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
@@ -206,7 +215,15 @@ a:focus-visible, button:focus-visible { outline: 3px solid rgba(79, 70, 229, .35
 .meetup-date b { font-size: 34px; line-height: 1; display: block; }
 .meetup-date span { font-size: 9px; text-transform: uppercase; letter-spacing: .16em; color: #c7d2fe; }
 .meetup-info h3 { font-size: 18px; line-height: 1.3; letter-spacing: -.025em; margin: 0 0 7px; }
+.meetup-title-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.meetup-title-row h3 { margin-bottom: 0; }
+.meetup-going { padding: 4px 7px; border-radius: 999px; color: #064e3b; background: #a7f3d0; font-size: 8px; font-weight: 900; white-space: nowrap; }
 .meetup-info p { margin: 0; color: #c7d2fe; font-size: 13px; }
+.meetup-info .meetup-title-row + p { margin-top: 7px; }
+.meetup-info .meetup-boss-cp { margin-top: 11px; padding-top: 0; border-top: 0; }
+.meetup-info .meetup-boss-cp > span { color: #a7f3d0; }
+.meetup-info .meetup-boss-cp li { border-color: rgba(255, 255, 255, .18); background: rgba(17, 12, 51, .38); }
+.meetup-info .meetup-boss-cp li small { color: #c7d2fe; }
 .meetup-info .checkin-rewards { margin-top: 10px; }
 .meetup-info .checkin-rewards > span { color: #a7f3d0; }
 .meetup-info .checkin-rewards li { border-color: rgba(255, 255, 255, .18); background: rgba(17, 12, 51, .38); }
